@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Zap } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
+import { ConnectWalletButton } from "@/src/components/ui/connect-wallet-button";
 
 const links = [
   { href: "#features", label: "Features" },
@@ -41,6 +42,7 @@ export function MarketingNav() {
               GitHub
             </a>
           </Button>
+          <ConnectWalletButton />
           <Button asChild size="sm">
             <Link href="/dashboard">Open dashboard</Link>
           </Button>
