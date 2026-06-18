@@ -1,13 +1,14 @@
 import type { StateCreator } from 'zustand';
 import type { AppStore, DataState, DataActions } from '../types';
-import type { NotificationChannel, NotificationRule, WatchedContract } from '@/src/lib/mock-data';
-import { channels as initialChannels, rules as initialRules, watchlist as initialWatchlist } from '@/src/lib/mock-data';
+import type { ChainEvent, NotificationChannel, NotificationRule, WatchedContract } from '@/src/lib/mock-data';
+import { channels as initialChannels, rules as initialRules, watchlist as initialWatchlist, events as initialEvents } from '@/src/lib/mock-data';
 
 export const dataSlice: StateCreator<AppStore, [], [], DataState & DataActions> = (set) => ({
   // Initial state
   channels: initialChannels,
   rules: initialRules,
   watchlist: initialWatchlist,
+  events: initialEvents,
 
   // Channels actions
   updateChannel: (id: string, updates: Partial<NotificationChannel>) =>
@@ -86,10 +87,30 @@ export const dataSlice: StateCreator<AppStore, [], [], DataState & DataActions> 
       watchlist: state.watchlist.filter((w) => w.id !== id),
     })),
 
+  // Events actions
+  updateEvent: (id: string, updates: Partial<ChainEvent>) =>
+    set((state) => ({
+      events: state.events.map((e) =>
+        e.id === id ? { ...e, ...updates } : e
+      ),
+    })),
+
+  // Mark a previously failed notification as re-delivered and clear its
+  // failure reason. Used by the retry-notification modal once a retry succeeds.
+  retryNotification: (id: string) =>
+    set((state) => ({
+      events: state.events.map((e) =>
+        e.id === id
+          ? { ...e, status: 'delivered', failureReason: undefined }
+          : e
+      ),
+    })),
+
   resetData: () =>
     set(() => ({
       channels: initialChannels,
       rules: initialRules,
       watchlist: initialWatchlist,
+      events: initialEvents,
     })),
 });
