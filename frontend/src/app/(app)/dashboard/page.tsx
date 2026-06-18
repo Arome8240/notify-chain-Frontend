@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Activity,
   Bell,
@@ -8,18 +8,20 @@ import {
   CheckCircle2,
   Search,
   ExternalLink,
+  RefreshCw,
 } from "lucide-react";
 import { Topbar } from "@/src/components/dashboard/topbar";
 import { StatCard } from "@/src/components/dashboard/stat-card";
 import { StatusBadge } from "@/src/components/dashboard/status-badge";
 import { EventVolumeChart } from "@/src/components/dashboard/event-volume-chart";
-import { useUIState } from "@/src/store";
+import { RetryNotificationModal } from "@/src/components/dashboard/retry-notification-modal";
+import { useUIState, useData } from "@/src/store";
 import {
-  events,
   dashboardStats,
   CHAINS,
   chainColors,
   timeAgo,
+  type ChainEvent,
   type EventStatus,
 } from "@/src/lib/mock-data";
 
@@ -36,6 +38,10 @@ export default function DashboardPage() {
   const query = useUIState((state) => state.dashboardSearchQuery);
   const setChain = useUIState((state) => state.setDashboardChainFilter);
   const setQuery = useUIState((state) => state.setDashboardSearchQuery);
+  const events = useData((state) => state.events);
+
+  // Event whose failed notification is being retried in the modal.
+  const [retryEvent, setRetryEvent] = useState<ChainEvent | null>(null);
 
   const filtered = useMemo(() => {
     return events.filter((e) => {
@@ -48,7 +54,7 @@ export default function DashboardPage() {
         e.txHash.toLowerCase().includes(q);
       return matchesChain && matchesQuery;
     });
-  }, [chain, query]);
+  }, [events, chain, query]);
 
   return (
     <>
@@ -196,12 +202,22 @@ export default function DashboardPage() {
                   )}
                 </div>
 
-                <div>
+                <div className="flex items-center gap-2">
                   <StatusBadge
                     tone={statusTone[e.status]}
                     label={e.status}
                     pulse={e.status === "pending"}
                   />
+                  {e.status === "failed" ? (
+                    <button
+                      onClick={() => setRetryEvent(e)}
+                      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
+                      aria-label={`Retry notification for ${e.eventName} on ${e.contract}`}
+                    >
+                      <RefreshCw className="size-3" />
+                      Retry
+                    </button>
+                  ) : null}
                 </div>
 
                 <div className="flex items-center justify-between gap-2 lg:justify-end">
@@ -227,6 +243,14 @@ export default function DashboardPage() {
           ) : null}
         </div>
       </div>
+
+      <RetryNotificationModal
+        event={retryEvent}
+        open={retryEvent !== null}
+        onOpenChange={(open) => {
+          if (!open) setRetryEvent(null);
+        }}
+      />
     </>
   );
 }
