@@ -1,17 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Copy, Check, Trash2 } from "lucide-react";
+import { Plus, Copy, Check, Trash2, X } from "lucide-react";
 import { Topbar } from "@/src/components/dashboard/topbar";
 import Link from "next/link";
 import { StatusBadge } from "@/src/components/dashboard/status-badge";
 import { Button } from "@/src/components/ui/button";
+import { Input } from "@/src/components/ui/input";
 import { useData } from "@/src/store";
 import { ExportMenu } from "@/src/components/export-menu";
 import {
   chainColors,
   timeAgo,
+  CHAINS,
+  type WatchedContract,
+  type Chain,
 } from "@/src/lib/mock-data";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/src/components/ui/dialog";
 
 function shorten(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
@@ -21,12 +33,47 @@ export default function WatchlistPage() {
   const items = useData((state) => state.watchlist);
   const toggleWatchlistItem = useData((state) => state.toggleWatchlistItem);
   const removeWatchlistItem = useData((state) => state.removeWatchlistItem);
+  const addWatchlistItem = useData((state) => state.addWatchlistItem);
   const [copied, setCopied] = useState<string | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    address: "",
+    chain: "Ethereum" as Chain,
+    type: "Custom" as WatchedContract["type"],
+    events: "",
+  });
 
   function copy(addr: string) {
     navigator.clipboard?.writeText(addr);
     setCopied(addr);
     setTimeout(() => setCopied(null), 1500);
+  }
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    
+    const newContract: WatchedContract = {
+      id: `wc_${Date.now()}`,
+      name: formData.name,
+      address: formData.address,
+      chain: formData.chain,
+      type: formData.type,
+      events: formData.events.split(",").map((e: string) => e.trim()).filter((e: string) => e.length > 0),
+      eventsToday: 0,
+      addedAt: new Date().toISOString(),
+      active: true,
+    };
+
+    addWatchlistItem(newContract);
+    setIsDialogOpen(false);
+    setFormData({
+      name: "",
+      address: "",
+      chain: "Ethereum",
+      type: "Custom",
+      events: "",
+    });
   }
 
   const activeCount = items.filter((i) => i.active).length;
@@ -46,7 +93,7 @@ export default function WatchlistPage() {
           </p>
           <div className="flex items-center gap-2">
             <ExportMenu dataType="watchlist" />
-            <Button>
+            <Button onClick={() => setIsDialogOpen(true)}>
               <Plus className="size-4" />
               Add contract
             </Button>
@@ -152,6 +199,100 @@ export default function WatchlistPage() {
           ) : null}
         </div>
       </div>
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent onClose={() => setIsDialogOpen(false)}>
+          <DialogHeader>
+            <DialogTitle>Add Contract to Watchlist</DialogTitle>
+            <DialogDescription>
+              Enter the contract details to start tracking events.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <label htmlFor="name" className="text-sm font-medium">
+                Contract Name
+              </label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="e.g., USDC"
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="address" className="text-sm font-medium">
+                Contract Address
+              </label>
+              <Input
+                id="address"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                placeholder="0x..."
+                required
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="chain" className="text-sm font-medium">
+                Chain
+              </label>
+              <select
+                id="chain"
+                value={formData.chain}
+                onChange={(e) => setFormData({ ...formData, chain: e.target.value as Chain })}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                required
+              >
+                {CHAINS.map((chain) => (
+                  <option key={chain} value={chain}>
+                    {chain}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="type" className="text-sm font-medium">
+                Contract Type
+              </label>
+              <select
+                id="type"
+                value={formData.type}
+                onChange={(e) => setFormData({ ...formData, type: e.target.value as WatchedContract["type"] })}
+                className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                required
+              >
+                <option value="ERC-20">ERC-20</option>
+                <option value="ERC-721">ERC-721</option>
+                <option value="DeFi">DeFi</option>
+                <option value="Governance">Governance</option>
+                <option value="Custom">Custom</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="events" className="text-sm font-medium">
+                Events (comma-separated)
+              </label>
+              <Input
+                id="events"
+                value={formData.events}
+                onChange={(e) => setFormData({ ...formData, events: e.target.value })}
+                placeholder="e.g., Transfer, Approval"
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button type="submit">Add Contract</Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
