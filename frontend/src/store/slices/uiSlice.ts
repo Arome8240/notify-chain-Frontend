@@ -6,6 +6,7 @@ import type {
   ViewMode,
   Theme,
   DashboardFilterPreset,
+  DashboardStatusFilter,
   ExportStatus,
 } from '../types';
 import { DEFAULT_UI_STATE } from '../defaults';
@@ -50,6 +51,20 @@ export const uiSlice: StateCreator<AppStore, [], [], UIState & UIActions> = (set
       dashboardSearchQuery: query,
     })),
 
+  setDashboardStatusFilters: (statuses: DashboardStatusFilter[]) =>
+    set(() => ({
+      dashboardStatusFilters: statuses,
+    })),
+
+  toggleDashboardStatusFilter: (status: DashboardStatusFilter) =>
+    set((state) => {
+      const current = state.dashboardStatusFilters;
+      const next = current.includes(status)
+        ? current.filter((s) => s !== status)
+        : [...current, status];
+      return { dashboardStatusFilters: next };
+    }),
+
   saveDashboardFilterPreset: (name: string) =>
     set((state) => {
       const now = new Date().toISOString();
@@ -60,6 +75,7 @@ export const uiSlice: StateCreator<AppStore, [], [], UIState & UIActions> = (set
         name,
         dashboardChainFilter: state.dashboardChainFilter,
         dashboardSearchQuery: state.dashboardSearchQuery,
+        dashboardStatusFilters: [...state.dashboardStatusFilters],
         createdAt: now,
         updatedAt: now,
       };
@@ -97,6 +113,7 @@ export const uiSlice: StateCreator<AppStore, [], [], UIState & UIActions> = (set
       return {
         dashboardChainFilter: preset.dashboardChainFilter,
         dashboardSearchQuery: preset.dashboardSearchQuery,
+        dashboardStatusFilters: preset.dashboardStatusFilters ?? [],
       };
     }),
 

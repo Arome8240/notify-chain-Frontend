@@ -11,6 +11,7 @@ export const DEFAULT_UI_STATE: UIState = {
   theme: 'system',
   dashboardChainFilter: 'All',
   dashboardSearchQuery: '',
+  dashboardStatusFilters: [],
   dashboardFilterPresets: [],
   exportJobs: [],
 };

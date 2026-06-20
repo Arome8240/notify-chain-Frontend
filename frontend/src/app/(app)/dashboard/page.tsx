@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, Suspense } from "react";
 import {
   Activity,
   Bell,
@@ -20,6 +20,7 @@ import { StatusBadge } from "@/src/components/dashboard/status-badge";
 import { EventVolumeChart } from "@/src/components/dashboard/event-volume-chart";
 import { DeliveryHeatmap } from "@/src/components/dashboard/delivery-heatmap";
 import { ChannelMetrics } from "@/src/components/dashboard/channel-metrics";
+import { FilterChipGroup } from "@/src/components/dashboard/filter-chip-group";
 import { DeliveryTrendsChart } from "@/src/components/dashboard/delivery-trends-chart";
 import { useUIState } from "@/src/store";
 import { useKeyboardList } from "@/src/lib/use-keyboard-list";
@@ -49,23 +50,31 @@ function formatFilterSummary(preset: DashboardFilterPreset) {
   if (preset.dashboardSearchQuery.trim()) {
     parts.push(`"${preset.dashboardSearchQuery.trim()}"`);
   }
+  if (preset.dashboardStatusFilters?.length) {
+    parts.push(preset.dashboardStatusFilters.join(", "));
+  }
   return parts.join(" | ");
 }
 
 function sameFilterState(
   chain: string,
   query: string,
+  statusFilters: string[],
   preset: DashboardFilterPreset
 ) {
+  const presetStatuses = preset.dashboardStatusFilters ?? [];
   return (
     chain === preset.dashboardChainFilter &&
-    query.trim() === preset.dashboardSearchQuery.trim()
+    query.trim() === preset.dashboardSearchQuery.trim() &&
+    statusFilters.length === presetStatuses.length &&
+    statusFilters.every((s) => (presetStatuses as string[]).includes(s))
   );
 }
 
 export default function DashboardPage() {
   const chain = useUIState((state) => state.dashboardChainFilter);
   const query = useUIState((state) => state.dashboardSearchQuery);
+  const statusFilters = useUIState((state) => state.dashboardStatusFilters);
   const presets = useUIState((state) => state.dashboardFilterPresets);
   const setChain = useUIState((state) => state.setDashboardChainFilter);
   const setQuery = useUIState((state) => state.setDashboardSearchQuery);
@@ -91,11 +100,16 @@ export default function DashboardPage() {
         e.contract.toLowerCase().includes(q) ||
         e.eventName.toLowerCase().includes(q) ||
         e.txHash.toLowerCase().includes(q);
-      return matchesChain && matchesQuery;
+      const matchesStatus =
+        statusFilters.length === 0 ||
+        (statusFilters as string[]).includes(e.status);
+      return matchesChain && matchesQuery && matchesStatus;
     });
-  }, [chain, query]);
+  }, [chain, query, statusFilters]);
 
-  const activePreset = presets.find((preset) => sameFilterState(chain, query, preset));
+  const activePreset = presets.find((preset) =>
+    sameFilterState(chain, query, statusFilters, preset)
+  );
 
   function openNewPresetForm() {
     setEditingPresetId(null);
@@ -256,6 +270,13 @@ export default function DashboardPage() {
               </div>
             </div>
 
+            {/* Status filter chips */}
+            <div className="border-b border-border px-5 py-3">
+              <Suspense fallback={null}>
+                <FilterChipGroup />
+              </Suspense>
+            </div>
+
             <div className="hidden grid-cols-[1.4fr_1fr_1fr_0.8fr_0.6fr] gap-4 border-b border-border px-5 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground lg:grid">
               <span>Event</span>
               <span>Args</span>
@@ -401,6 +422,7 @@ export default function DashboardPage() {
                         name: "preview",
                         dashboardChainFilter: chain,
                         dashboardSearchQuery: query,
+                        dashboardStatusFilters: statusFilters,
                         createdAt: "",
                         updatedAt: "",
                       })}
