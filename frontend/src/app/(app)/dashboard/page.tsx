@@ -20,6 +20,7 @@ import { StatusBadge } from "@/src/components/dashboard/status-badge";
 import { EventVolumeChart } from "@/src/components/dashboard/event-volume-chart";
 import { ChannelMetrics } from "@/src/components/dashboard/channel-metrics";
 import { useUIState } from "@/src/store";
+import { useKeyboardList } from "@/src/lib/use-keyboard-list";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { ExportMenu } from "@/src/components/export-menu";
@@ -75,6 +76,9 @@ export default function DashboardPage() {
   const [editingPresetId, setEditingPresetId] = useState<string | null>(null);
   const [presetName, setPresetName] = useState("");
   const [presetError, setPresetError] = useState<string | null>(null);
+
+  const { listRef: eventsListRef, getRowProps: getEventRowProps } =
+    useKeyboardList(filtered.length);
 
   const filtered = useMemo(() => {
     return events.filter((e) => {
@@ -246,11 +250,18 @@ export default function DashboardPage() {
               <span className="text-right">Time</span>
             </div>
 
-            <ul className="divide-y divide-border">
-              {filtered.map((e) => (
+            <ul
+                className="divide-y divide-border"
+                ref={eventsListRef as React.RefObject<HTMLUListElement>}
+                role="listbox"
+                aria-label="Recent events"
+              >
+              {filtered.map((e, index) => (
                 <li
                   key={e.id}
-                  className="grid grid-cols-1 gap-3 px-5 py-4 transition-colors hover:bg-secondary/30 lg:grid-cols-[1.4fr_1fr_1fr_0.8fr_0.6fr] lg:items-center lg:gap-4"
+                  {...getEventRowProps(index)}
+                  className="grid grid-cols-1 gap-3 px-5 py-4 transition-colors hover:bg-secondary/30 focus:bg-secondary/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring lg:grid-cols-[1.4fr_1fr_1fr_0.8fr_0.6fr] lg:items-center lg:gap-4"
+                  aria-label={`${e.eventName} on ${e.contract}, ${e.chain}, status ${e.status}`}
                 >
                   <div className="flex items-center gap-3">
                     <span

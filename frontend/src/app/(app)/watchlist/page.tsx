@@ -8,10 +8,8 @@ import { StatusBadge } from "@/src/components/dashboard/status-badge";
 import { Button } from "@/src/components/ui/button";
 import { useData } from "@/src/store";
 import { ExportMenu } from "@/src/components/export-menu";
-import {
-  chainColors,
-  timeAgo,
-} from "@/src/lib/mock-data";
+import { chainColors, timeAgo } from "@/src/lib/mock-data";
+import { useKeyboardList } from "@/src/lib/use-keyboard-list";
 
 function shorten(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
@@ -22,6 +20,8 @@ export default function WatchlistPage() {
   const toggleWatchlistItem = useData((state) => state.toggleWatchlistItem);
   const removeWatchlistItem = useData((state) => state.removeWatchlistItem);
   const [copied, setCopied] = useState<string | null>(null);
+  const { listRef: watchlistRef, getRowProps: getWatchlistRowProps } =
+    useKeyboardList(items.length);
 
   function copy(addr: string) {
     navigator.clipboard?.writeText(addr);
@@ -62,11 +62,18 @@ export default function WatchlistPage() {
             <span className="text-right">Actions</span>
           </div>
 
-          <ul className="divide-y divide-border">
-            {items.map((c) => (
+          <ul
+              className="divide-y divide-border"
+              ref={watchlistRef as React.RefObject<HTMLUListElement>}
+              role="listbox"
+              aria-label="Watched contracts"
+            >
+            {items.map((c, index) => (
               <li
                 key={c.id}
-                className="grid grid-cols-1 gap-3 px-5 py-4 transition-colors hover:bg-secondary/30 lg:grid-cols-[1.6fr_1fr_1.4fr_0.7fr_0.6fr] lg:items-center lg:gap-4"
+                {...getWatchlistRowProps(index)}
+                className="grid grid-cols-1 gap-3 px-5 py-4 transition-colors hover:bg-secondary/30 focus:bg-secondary/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring lg:grid-cols-[1.6fr_1fr_1.4fr_0.7fr_0.6fr] lg:items-center lg:gap-4"
+                aria-label={`${c.name} on ${c.chain}, ${c.active ? "active" : "paused"}`}
               >
                 <div className="flex items-center gap-3">
                   <span

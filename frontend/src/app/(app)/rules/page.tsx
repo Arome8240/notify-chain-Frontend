@@ -12,11 +12,8 @@ import {
 import { Button } from "@/src/components/ui/button";
 import { useData } from "@/src/store";
 import { ExportMenu } from "@/src/components/export-menu";
-import {
-  channelLabels,
-  timeAgo,
-  type ChannelType,
-} from "@/src/lib/mock-data";
+import { channelLabels, timeAgo, type ChannelType } from "@/src/lib/mock-data";
+import { useKeyboardList } from "@/src/lib/use-keyboard-list";
 
 export default function RulesPage() {
   const rules = useData((state) => state.rules);
@@ -24,6 +21,8 @@ export default function RulesPage() {
   const [showForm, setShowForm] = useState(false);
 
   const activeCount = rules.filter((r) => r.status === "active").length;
+  const { listRef: rulesListRef, getRowProps: getRuleRowProps } =
+    useKeyboardList(rules.length);
 
   return (
     <>
@@ -51,11 +50,18 @@ export default function RulesPage() {
           <NewRuleForm onClose={() => setShowForm(false)} />
         ) : null}
 
-        <div className="grid gap-4">
-            {rules.map((rule) => (
-              <div
+        <ul
+            className="grid gap-4"
+            ref={rulesListRef as React.RefObject<HTMLUListElement>}
+            role="listbox"
+            aria-label="Notification rules"
+          >
+            {rules.map((rule, index) => (
+              <li
                 key={rule.id}
-                className="rounded-xl border border-border bg-card p-5"
+                {...getRuleRowProps(index)}
+                className="rounded-xl border border-border bg-card p-5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={`${rule.name}, ${rule.status}, triggered ${rule.triggered24h} times in the last 24 hours`}
               >
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div className="min-w-0">
@@ -141,9 +147,9 @@ export default function RulesPage() {
                     </label>
                 </div>
               </div>
-            </div>
+            </li>
           ))}
-        </div>
+        </ul>
       </div>
     </>
   );
