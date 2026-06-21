@@ -1,14 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Copy, Check, Trash2, X } from "lucide-react";
 import { Topbar } from "@/src/components/dashboard/topbar";
 import Link from "next/link";
 import { StatusBadge } from "@/src/components/dashboard/status-badge";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
-import { useData } from "@/src/store";
+import { useData, usePreferences } from "@/src/store";
 import { ExportMenu } from "@/src/components/export-menu";
+import { ColumnToggle } from "@/src/components/column-toggle";
+import type { ColumnDef } from "@/src/components/column-toggle";
 import {
   chainColors,
   timeAgo,
@@ -24,8 +26,22 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/src/components/ui/dialog";
-import { chainColors, timeAgo } from "@/src/lib/mock-data";
 import { useKeyboardList } from "@/src/lib/use-keyboard-list";
+
+const WATCHLIST_COLUMNS: (ColumnDef & { width: string })[] = [
+  { id: "contract", label: "Contract", width: "1.6fr" },
+  { id: "type", label: "Type", width: "1fr" },
+  { id: "events", label: "Tracked events", width: "1.4fr" },
+  { id: "eventsToday", label: "Events today", width: "0.7fr" },
+  { id: "actions", label: "Actions", width: "0.6fr" },
+];
+
+function gridTemplate(visibility: Record<string, boolean>): string {
+  return WATCHLIST_COLUMNS
+    .filter((c) => visibility[c.id] !== false)
+    .map((c) => c.width)
+    .join(" ");
+}
 
 function shorten(addr: string) {
   return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
@@ -36,6 +52,17 @@ export default function WatchlistPage() {
   const toggleWatchlistItem = useData((state) => state.toggleWatchlistItem);
   const removeWatchlistItem = useData((state) => state.removeWatchlistItem);
   const addWatchlistItem = useData((state) => state.addWatchlistItem);
+  const watchlistVisibility = usePreferences(
+    (state) => state.columnVisibility.watchlist
+  ) as Record<string, boolean>;
+  const wCols = gridTemplate(watchlistVisibility);
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    setIsDesktop(window.innerWidth >= 1024);
+    const onResize = () => setIsDesktop(window.innerWidth >= 1024);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
   const [copied, setCopied] = useState<string | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [formData, setFormData] = useState({
@@ -97,6 +124,10 @@ export default function WatchlistPage() {
           </p>
           <div className="flex items-center gap-2">
             <ExportMenu dataType="watchlist" />
+            <ColumnToggle
+              table="watchlist"
+              columns={WATCHLIST_COLUMNS}
+            />
             <Button onClick={() => setIsDialogOpen(true)}>
               <Plus className="size-4" />
               Add contract
@@ -105,12 +136,20 @@ export default function WatchlistPage() {
         </div>
 
         <div className="overflow-hidden rounded-xl border border-border bg-card">
-          <div className="hidden grid-cols-[1.6fr_1fr_1.4fr_0.7fr_0.6fr] gap-4 border-b border-border px-5 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground lg:grid">
-            <span>Contract</span>
-            <span>Type</span>
-            <span>Tracked events</span>
-            <span className="text-right">Events today</span>
-            <span className="text-right">Actions</span>
+          <div
+            className="hidden gap-4 border-b border-border px-5 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground lg:grid"
+            style={{ gridTemplateColumns: wCols }}
+          >
+            {WATCHLIST_COLUMNS.filter((c) => watchlistVisibility[c.id] !== false).map((c) => (
+              <span
+                key={c.id}
+                className={
+                  c.id === "eventsToday" || c.id === "actions" ? "text-right" : ""
+                }
+              >
+                {c.label}
+              </span>
+            ))}
           </div>
 
           <ul
@@ -123,82 +162,93 @@ export default function WatchlistPage() {
               <li
                 key={c.id}
                 {...getWatchlistRowProps(index)}
-                className="grid grid-cols-1 gap-3 px-5 py-4 transition-colors hover:bg-secondary/30 focus:bg-secondary/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring lg:grid-cols-[1.6fr_1fr_1.4fr_0.7fr_0.6fr] lg:items-center lg:gap-4"
+                className="grid grid-cols-1 gap-3 px-5 py-4 transition-colors hover:bg-secondary/30 focus:bg-secondary/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring lg:items-center lg:gap-4"
+                style={isDesktop ? { gridTemplateColumns: wCols } : undefined}
                 aria-label={`${c.name} on ${c.chain}, ${c.active ? "active" : "paused"}`}
               >
-                <div className="flex items-center gap-3">
-                  <span
-                    className="size-2.5 shrink-0 rounded-full"
-                    style={{ backgroundColor: chainColors[c.chain] }}
-                    title={c.chain}
-                  />
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2">
-                      <Link href={`/contracts/${c.id}`} className="truncate font-medium hover:underline">
-                        {c.name}
-                      </Link>
-                      <StatusBadge
-                        tone={c.active ? "success" : "muted"}
-                        label={c.active ? "active" : "paused"}
-                      />
-                    </div>
-                    <button
-                      onClick={() => copy(c.address)}
-                      className="mt-0.5 flex items-center gap-1.5 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
-                    >
-                      {shorten(c.address)}
-                      {copied === c.address ? (
-                        <Check className="size-3 text-primary" />
-                      ) : (
-                        <Copy className="size-3" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="text-sm text-muted-foreground">{c.type}</div>
-
-                <div className="flex flex-wrap gap-1.5">
-                  {c.events.map((ev) => (
+                {watchlistVisibility.contract !== false && (
+                  <div className="flex items-center gap-3">
                     <span
-                      key={ev}
-                      className="rounded-md border border-border bg-background px-1.5 py-0.5 font-mono text-xs text-muted-foreground"
-                    >
-                      {ev}
+                      className="size-2.5 shrink-0 rounded-full"
+                      style={{ backgroundColor: chainColors[c.chain] }}
+                      title={c.chain}
+                    />
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Link href={`/contracts/${c.id}`} className="truncate font-medium hover:underline">
+                          {c.name}
+                        </Link>
+                        <StatusBadge
+                          tone={c.active ? "success" : "muted"}
+                          label={c.active ? "active" : "paused"}
+                        />
+                      </div>
+                      <button
+                        onClick={() => copy(c.address)}
+                        className="mt-0.5 flex items-center gap-1.5 font-mono text-xs text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {shorten(c.address)}
+                        {copied === c.address ? (
+                          <Check className="size-3 text-primary" />
+                        ) : (
+                          <Copy className="size-3" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {watchlistVisibility.type !== false && (
+                  <div className="text-sm text-muted-foreground">{c.type}</div>
+                )}
+
+                {watchlistVisibility.events !== false && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {c.events.map((ev) => (
+                      <span
+                        key={ev}
+                        className="rounded-md border border-border bg-background px-1.5 py-0.5 font-mono text-xs text-muted-foreground"
+                      >
+                        {ev}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                {watchlistVisibility.eventsToday !== false && (
+                  <div className="text-sm lg:text-right">
+                    <span className="font-medium">
+                      {c.eventsToday.toLocaleString()}
                     </span>
-                  ))}
-                </div>
+                    <span className="ml-1 text-xs text-muted-foreground lg:hidden">
+                      events today
+                    </span>
+                    <p className="text-xs text-muted-foreground">
+                      added {timeAgo(c.addedAt)}
+                    </p>
+                  </div>
+                )}
 
-                <div className="text-sm lg:text-right">
-                  <span className="font-medium">
-                    {c.eventsToday.toLocaleString()}
-                  </span>
-                  <span className="ml-1 text-xs text-muted-foreground lg:hidden">
-                    events today
-                  </span>
-                  <p className="text-xs text-muted-foreground">
-                    added {timeAgo(c.addedAt)}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-2 lg:justify-end">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => toggleWatchlistItem(c.id)}
-                  >
-                    {c.active ? "Pause" : "Resume"}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon-sm"
-                    onClick={() => removeWatchlistItem(c.id)}
-                    aria-label="Remove contract"
-                    className="text-muted-foreground hover:text-destructive"
-                  >
-                    <Trash2 className="size-4" />
-                  </Button>
-                </div>
+                {watchlistVisibility.actions !== false && (
+                  <div className="flex items-center gap-2 lg:justify-end">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleWatchlistItem(c.id)}
+                    >
+                      {c.active ? "Pause" : "Resume"}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      onClick={() => removeWatchlistItem(c.id)}
+                      aria-label="Remove contract"
+                      className="text-muted-foreground hover:text-destructive"
+                    >
+                      <Trash2 className="size-4" />
+                    </Button>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
