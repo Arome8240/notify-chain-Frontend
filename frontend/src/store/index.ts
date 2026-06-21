@@ -55,6 +55,7 @@ export const useAppStore = create<AppStore>()(
           theme: state.theme,
           dashboardChainFilter: state.dashboardChainFilter,
           dashboardSearchQuery: state.dashboardSearchQuery,
+          dashboardStatusFilters: state.dashboardStatusFilters,
           dashboardFilterPresets: state.dashboardFilterPresets,
           language: state.language,
           currencyDisplay: state.currencyDisplay,
@@ -94,6 +95,7 @@ export function useUIState<T>(selector?: (state: AppStore) => T): T | AppStore {
     theme: state.theme,
     dashboardChainFilter: state.dashboardChainFilter,
     dashboardSearchQuery: state.dashboardSearchQuery,
+    dashboardStatusFilters: state.dashboardStatusFilters,
     dashboardFilterPresets: state.dashboardFilterPresets,
     exportJobs: state.exportJobs,
     toggleSidebar: state.toggleSidebar,
@@ -103,6 +105,8 @@ export function useUIState<T>(selector?: (state: AppStore) => T): T | AppStore {
     setTheme: state.setTheme,
     setDashboardChainFilter: state.setDashboardChainFilter,
     setDashboardSearchQuery: state.setDashboardSearchQuery,
+    setDashboardStatusFilters: state.setDashboardStatusFilters,
+    toggleDashboardStatusFilter: state.toggleDashboardStatusFilter,
     saveDashboardFilterPreset: state.saveDashboardFilterPreset,
     updateDashboardFilterPreset: state.updateDashboardFilterPreset,
     deleteDashboardFilterPreset: state.deleteDashboardFilterPreset,
@@ -191,6 +195,7 @@ export type {
   WalletState,
   WalletActions,
   DashboardFilterPreset,
+  DashboardStatusFilter,
 } from './types';
 
 /**

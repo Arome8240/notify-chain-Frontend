@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, Bell, Radio, Send, Megaphone } from "lucide-react";
+import { Activity, Bell, Radio, Send, GitCommitHorizontal } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 
 const nav = [
@@ -10,7 +10,7 @@ const nav = [
   { href: "/rules", label: "Rules", icon: Bell },
   { href: "/watchlist", label: "Watchlist", icon: Radio },
   { href: "/channels", label: "Channels", icon: Send },
-  { href: "/bulk", label: "Bulk", icon: Megaphone },
+  { href: "/timeline", label: "Timeline", icon: GitCommitHorizontal },
 ];
 
 export function MobileNav() {

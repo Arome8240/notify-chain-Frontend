@@ -27,6 +27,9 @@ export interface ExportJob {
 export type ViewMode = 'grid' | 'list';
 export type Theme = 'light' | 'dark' | 'system';
 
+/** Mirror of EventStatus from mock-data — kept here to avoid a circular dep */
+export type DashboardStatusFilter = 'delivered' | 'pending' | 'failed';
+
 export interface UIState {
   sidebarOpen: boolean;
   activeModal: string | null;
@@ -35,6 +38,8 @@ export interface UIState {
   // Dashboard filters
   dashboardChainFilter: string;
   dashboardSearchQuery: string;
+  /** Active status filters. Empty array means "show all". */
+  dashboardStatusFilters: DashboardStatusFilter[];
   dashboardFilterPresets: DashboardFilterPreset[];
   // Export jobs
   exportJobs: ExportJob[];
@@ -48,6 +53,10 @@ export interface UIActions {
   setTheme: (theme: Theme) => void;
   setDashboardChainFilter: (chain: string) => void;
   setDashboardSearchQuery: (query: string) => void;
+  /** Replace the whole status-filter selection. Pass [] to clear. */
+  setDashboardStatusFilters: (statuses: DashboardStatusFilter[]) => void;
+  /** Toggle a single status on/off within the multi-select set. */
+  toggleDashboardStatusFilter: (status: DashboardStatusFilter) => void;
   saveDashboardFilterPreset: (name: string) => void;
   updateDashboardFilterPreset: (id: string, name: string) => void;
   deleteDashboardFilterPreset: (id: string) => void;
@@ -67,6 +76,7 @@ export interface DashboardFilterPreset {
   name: string;
   dashboardChainFilter: string;
   dashboardSearchQuery: string;
+  dashboardStatusFilters: DashboardStatusFilter[];
   createdAt: string;
   updatedAt: string;
 }

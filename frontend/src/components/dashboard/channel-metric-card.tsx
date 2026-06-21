@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { CheckCircle2, XCircle } from "lucide-react";
 import { Skeleton } from "@/src/components/ui/skeleton";
 import { deliveryChannelIcons } from "@/src/components/dashboard/channel-icon";
@@ -10,7 +11,11 @@ export function ChannelMetricCard({ metric }: { metric: ChannelMetric }) {
   const successRate = total > 0 ? (metric.successful / total) * 100 : 0;
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <Link
+      href="/dashboard/analytics/delivery-success"
+      className="rounded-xl border border-border bg-card p-5 block transition-colors hover:bg-secondary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      aria-label={`View delivery details for ${deliveryChannelLabels[metric.channel]}`}
+    >
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-2 text-sm text-muted-foreground">
           <span className="flex size-7 items-center justify-center rounded-md bg-secondary text-foreground">
@@ -32,14 +37,10 @@ export function ChannelMetricCard({ metric }: { metric: ChannelMetric }) {
       <p className="text-xs text-muted-foreground">total notifications</p>
 
       <div className="mt-4 grid grid-cols-2 gap-2">
-        <MetricLeg
-          tone="success"
-          label="Delivered"
-          value={metric.successful}
-        />
+        <MetricLeg tone="success" label="Delivered" value={metric.successful} />
         <MetricLeg tone="danger" label="Failed" value={metric.failed} />
       </div>
-    </div>
+    </Link>
   );
 }
 
