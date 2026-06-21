@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, Suspense } from "react";
+import { useMemo, useState, useEffect, Suspense } from "react";
 import {
   Activity,
   Bell,
@@ -22,12 +22,14 @@ import { DeliveryHeatmap } from "@/src/components/dashboard/delivery-heatmap";
 import { ChannelMetrics } from "@/src/components/dashboard/channel-metrics";
 import { FilterChipGroup } from "@/src/components/dashboard/filter-chip-group";
 import { DeliveryTrendsChart } from "@/src/components/dashboard/delivery-trends-chart";
-import { useUIState } from "@/src/store";
+import { useUIState, usePreferences } from "@/src/store";
 import { useKeyboardList } from "@/src/lib/use-keyboard-list";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
 import { ExportMenu } from "@/src/components/export-menu";
-import type { DashboardFilterPreset } from "@/src/store/types";
+import { ColumnToggle } from "@/src/components/column-toggle";
+import type { DashboardFilterPreset, ColumnVisibility } from "@/src/store/types";
+import type { ColumnDef } from "@/src/components/column-toggle";
 import {
   events,
   dashboardStats,
@@ -44,6 +46,21 @@ const statusTone: Record<EventStatus, "success" | "pending" | "danger"> = {
 };
 
 const chainFilters = ["All", ...CHAINS] as const;
+
+const DASHBOARD_COLUMNS: (ColumnDef & { width: string })[] = [
+  { id: "event", label: "Event", width: "1.4fr" },
+  { id: "args", label: "Args", width: "1fr" },
+  { id: "rule", label: "Rule", width: "1fr" },
+  { id: "status", label: "Status", width: "0.8fr" },
+  { id: "time", label: "Time", width: "0.6fr" },
+];
+
+function gridTemplate(visibility: Record<string, boolean>): string {
+  return DASHBOARD_COLUMNS
+    .filter((c) => visibility[c.id] !== false)
+    .map((c) => c.width)
+    .join(" ");
+}
 
 function formatFilterSummary(preset: DashboardFilterPreset) {
   const parts = [preset.dashboardChainFilter];
@@ -82,6 +99,19 @@ export default function DashboardPage() {
   const updatePreset = useUIState((state) => state.updateDashboardFilterPreset);
   const deletePreset = useUIState((state) => state.deleteDashboardFilterPreset);
   const applyPreset = useUIState((state) => state.applyDashboardFilterPreset);
+
+  const dashboardVisibility = usePreferences(
+    (state) => state.columnVisibility.dashboard
+  ) as Record<string, boolean>;
+  const cols = gridTemplate(dashboardVisibility);
+
+  const [isDesktop, setIsDesktop] = useState(false);
+  useEffect(() => {
+    setIsDesktop(window.innerWidth >= 1024);
+    const onResize = () => setIsDesktop(window.innerWidth >= 1024);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingPresetId, setEditingPresetId] = useState<string | null>(null);
@@ -242,6 +272,10 @@ export default function DashboardPage() {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <ExportMenu dataType="events" />
+                <ColumnToggle
+                  table="dashboard"
+                  columns={DASHBOARD_COLUMNS}
+                />
                 <div className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-1.5">
                   <Search className="size-4 text-muted-foreground" />
                   <input
@@ -277,12 +311,15 @@ export default function DashboardPage() {
               </Suspense>
             </div>
 
-            <div className="hidden grid-cols-[1.4fr_1fr_1fr_0.8fr_0.6fr] gap-4 border-b border-border px-5 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground lg:grid">
-              <span>Event</span>
-              <span>Args</span>
-              <span>Rule</span>
-              <span>Status</span>
-              <span className="text-right">Time</span>
+            <div
+              className="hidden gap-4 border-b border-border px-5 py-2.5 text-xs font-medium uppercase tracking-wider text-muted-foreground lg:grid"
+              style={{ gridTemplateColumns: cols }}
+            >
+              {DASHBOARD_COLUMNS.filter((c) => dashboardVisibility[c.id] !== false).map((c) => (
+                <span key={c.id} className={c.id === "time" ? "text-right" : ""}>
+                  {c.label}
+                </span>
+              ))}
             </div>
 
             <ul
@@ -295,61 +332,72 @@ export default function DashboardPage() {
                 <li
                   key={e.id}
                   {...getEventRowProps(index)}
-                  className="grid grid-cols-1 gap-3 px-5 py-4 transition-colors hover:bg-secondary/30 focus:bg-secondary/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring lg:grid-cols-[1.4fr_1fr_1fr_0.8fr_0.6fr] lg:items-center lg:gap-4"
+                  className="grid grid-cols-1 gap-3 px-5 py-4 transition-colors hover:bg-secondary/30 focus:bg-secondary/30 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring lg:items-center lg:gap-4"
+                  style={isDesktop ? { gridTemplateColumns: cols } : undefined}
                   aria-label={`${e.eventName} on ${e.contract}, ${e.chain}, status ${e.status}`}
                 >
-                  <div className="flex items-center gap-3">
-                    <span
-                      className="mt-0.5 size-2 shrink-0 rounded-full"
-                      style={{ backgroundColor: chainColors[e.chain] }}
-                      title={e.chain}
-                    />
-                    <div className="min-w-0">
-                      <p className="truncate font-mono text-sm">
-                        <span className="text-primary">{e.eventName}</span>
-                        <span className="text-muted-foreground"> | {e.contract}</span>
-                      </p>
-                      <p className="truncate text-xs text-muted-foreground">
-                        {e.chain} | block {e.blockNumber.toLocaleString()}
-                      </p>
+                  {dashboardVisibility.event !== false && (
+                    <div className="flex items-center gap-3">
+                      <span
+                        className="mt-0.5 size-2 shrink-0 rounded-full"
+                        style={{ backgroundColor: chainColors[e.chain] }}
+                        title={e.chain}
+                      />
+                      <div className="min-w-0">
+                        <p className="truncate font-mono text-sm">
+                          <span className="text-primary">{e.eventName}</span>
+                          <span className="text-muted-foreground"> | {e.contract}</span>
+                        </p>
+                        <p className="truncate text-xs text-muted-foreground">
+                          {e.chain} | block {e.blockNumber.toLocaleString()}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  )}
 
-                  <div className="truncate font-mono text-xs text-muted-foreground">
-                    {Object.entries(e.args)
-                      .slice(0, 2)
-                      .map(([k, v]) => `${k}: ${v}`)
-                      .join("  |  ")}
-                  </div>
+                  {dashboardVisibility.args !== false && (
+                    <div className="truncate font-mono text-xs text-muted-foreground">
+                      {Object.entries(e.args)
+                        .slice(0, 2)
+                        .map(([k, v]) => `${k}: ${v}`)
+                        .join("  |  ")}
+                    </div>
+                  )}
 
-                  <div className="text-sm">
-                    {e.matchedRule ? (
-                      <span className="text-foreground">{e.matchedRule}</span>
-                    ) : (
-                      <span className="text-muted-foreground">-</span>
-                    )}
-                  </div>
+                  {dashboardVisibility.rule !== false && (
+                    <div className="text-sm">
+                      {e.matchedRule ? (
+                        <span className="text-foreground">{e.matchedRule}</span>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
+                    </div>
+                  )}
 
-                  <div>
-                    <StatusBadge
-                      tone={statusTone[e.status]}
-                      label={e.status}
-                      pulse={e.status === "pending"}
-                    />
-                  </div>
+                  {dashboardVisibility.status !== false && (
+                    <div>
+                      <StatusBadge
+                        tone={statusTone[e.status]}
+                        label={e.status}
+                        pulse={e.status === "pending"}
+                      />
+                    </div>
+                  )}
 
-                  <div className="flex items-center justify-between gap-2 lg:justify-end">
-                    <span className="text-xs text-muted-foreground">
-                      {timeAgo(e.timestamp)}
-                    </span>
-                    <a
-                      href="#"
-                      className="text-muted-foreground transition-colors hover:text-foreground"
-                      aria-label="View transaction"
-                    >
-                      <ExternalLink className="size-3.5" />
-                    </a>
-                  </div>
+                  {dashboardVisibility.time !== false && (
+                    <div className="flex items-center justify-between gap-2 lg:justify-end">
+                      <span className="text-xs text-muted-foreground">
+                        {timeAgo(e.timestamp)}
+                      </span>
+                      <a
+                        href="#"
+                        className="text-muted-foreground transition-colors hover:text-foreground"
+                        aria-label="View transaction"
+                      >
+                        <ExternalLink className="size-3.5" />
+                      </a>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>

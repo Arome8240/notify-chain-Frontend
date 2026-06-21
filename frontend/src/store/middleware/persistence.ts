@@ -33,6 +33,7 @@ export const persistenceConfig: PersistOptions<AppStore, Partial<AppStore>> = {
         currencyDisplay: merged.currencyDisplay || DEFAULT_PREFERENCES.currencyDisplay,
         notificationsEnabled: merged.notificationsEnabled !== undefined ? merged.notificationsEnabled : DEFAULT_PREFERENCES.notificationsEnabled,
         soundEnabled: merged.soundEnabled !== undefined ? merged.soundEnabled : DEFAULT_PREFERENCES.soundEnabled,
+        columnVisibility: merged.columnVisibility || DEFAULT_PREFERENCES.columnVisibility,
       } as AppStore;
     } catch (error) {
       logger.error('Error merging persisted state', error);
@@ -50,6 +51,7 @@ export const persistenceConfig: PersistOptions<AppStore, Partial<AppStore>> = {
     currencyDisplay: state.currencyDisplay,
     notificationsEnabled: state.notificationsEnabled,
     soundEnabled: state.soundEnabled,
+    columnVisibility: state.columnVisibility,
   }),
 };
 

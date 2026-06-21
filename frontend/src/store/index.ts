@@ -27,8 +27,8 @@ export const useAppStore = create<AppStore>()(
       }),
       {
         name: 'notify-chain-store',
-        version: 2,
-        migrate: (persistedState) => {
+        version: 3,
+        migrate: (persistedState, version) => {
           const state = persistedState as Partial<AppStore> | undefined;
           return {
             ...state,
@@ -61,6 +61,7 @@ export const useAppStore = create<AppStore>()(
           currencyDisplay: state.currencyDisplay,
           notificationsEnabled: state.notificationsEnabled,
           soundEnabled: state.soundEnabled,
+          columnVisibility: state.columnVisibility,
           channels: state.channels,
           rules: state.rules,
           watchlist: state.watchlist,
@@ -140,11 +141,15 @@ export function usePreferences<T>(selector?: (state: AppStore) => T): T | AppSto
     currencyDisplay: state.currencyDisplay,
     notificationsEnabled: state.notificationsEnabled,
     soundEnabled: state.soundEnabled,
+    columnVisibility: state.columnVisibility,
     setLanguage: state.setLanguage,
     setCurrencyDisplay: state.setCurrencyDisplay,
     toggleNotifications: state.toggleNotifications,
     toggleSound: state.toggleSound,
     resetPreferences: state.resetPreferences,
+    setColumnVisibility: state.setColumnVisibility,
+    toggleColumn: state.toggleColumn,
+    resetColumnVisibility: state.resetColumnVisibility,
   }))) as (state: AppStore) => T | AppStore;
   return useAppStore(sel);
 }

@@ -81,6 +81,15 @@ export interface DashboardFilterPreset {
   updatedAt: string;
 }
 
+// Column Visibility Types
+export type DashboardColumnId = 'event' | 'args' | 'rule' | 'status' | 'time';
+export type WatchlistColumnId = 'contract' | 'type' | 'events' | 'eventsToday' | 'actions';
+
+export interface ColumnVisibility {
+  dashboard: Record<DashboardColumnId, boolean>;
+  watchlist: Record<WatchlistColumnId, boolean>;
+}
+
 // Preferences State Types
 export type Language = 'en' | 'es' | 'fr' | 'de';
 export type CurrencyDisplay = 'USD' | 'EUR' | 'GBP' | 'JPY';
@@ -90,6 +99,7 @@ export interface PreferencesState {
   currencyDisplay: CurrencyDisplay;
   notificationsEnabled: boolean;
   soundEnabled: boolean;
+  columnVisibility: ColumnVisibility;
 }
 
 export interface PreferencesActions {
@@ -98,6 +108,9 @@ export interface PreferencesActions {
   toggleNotifications: () => void;
   toggleSound: () => void;
   resetPreferences: () => void;
+  setColumnVisibility: (table: keyof ColumnVisibility, visibility: Record<string, boolean>) => void;
+  toggleColumn: (table: keyof ColumnVisibility, column: string) => void;
+  resetColumnVisibility: (table?: keyof ColumnVisibility) => void;
 }
 
 // Data State Types
