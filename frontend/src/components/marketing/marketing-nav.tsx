@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Zap } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { ThemeToggle } from "@/src/components/theme-toggle";
+import { WalletButton } from "@/src/components/wallet-button";
 
 const links = [
   { href: "#features", label: "Features" },
@@ -43,6 +44,7 @@ export function MarketingNav() {
               GitHub
             </a>
           </Button>
+          <WalletButton className="hidden sm:inline-flex" />
           <Button asChild size="sm">
             <Link href="/dashboard">Open dashboard</Link>
           </Button>

@@ -9,6 +9,7 @@ import {
 } from "@/src/components/dashboard/channel-icon";
 import { Button } from "@/src/components/ui/button";
 import { useData } from "@/src/store";
+import { ExportMenu } from "@/src/components/export-menu";
 import {
   channelLabels,
   timeAgo,
@@ -38,7 +39,7 @@ export default function ChannelsPage() {
 
       <div className="flex-1 space-y-6 p-4 md:p-6">
         {/* Summary */}
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <div className="rounded-xl border border-border bg-card p-5">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Connected</span>
@@ -61,6 +62,9 @@ export default function ChannelsPage() {
             <p className="mt-3 text-2xl font-semibold tracking-tight">
               {totalDeliveries.toLocaleString()}
             </p>
+          </div>
+          <div className="flex items-center justify-center">
+            <ExportMenu dataType="channels" />
           </div>
           <div className="col-span-2 flex items-center justify-end lg:col-span-1">
             <Button className="w-full lg:w-auto">

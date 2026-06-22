@@ -59,6 +59,29 @@ function DialogContent({
         data-slot="dialog-content"
         className={cn(
           "bg-card text-card-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-xl border border-border p-6 shadow-lg duration-200 sm:max-w-lg",
+"use client"
+
+import * as React from "react"
+import { X } from "lucide-react"
+
+import { cn } from "@/src/lib/utils"
+
+const Dialog = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { open?: boolean; onOpenChange?: (open: boolean) => void }
+>(({ className, open, onOpenChange, children, ...props }, ref) => {
+  if (!open) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div
+        className="fixed inset-0 bg-black/50"
+        onClick={() => onOpenChange?.(false)}
+      />
+      <div
+        ref={ref}
+        className={cn(
+          "relative z-50 w-full max-w-lg rounded-lg border border-border bg-card p-6 shadow-lg",
           className
         )}
         {...props}
@@ -139,3 +162,80 @@ export {
   DialogTitle,
   DialogTrigger,
 }
+      </div>
+    </div>
+  )
+})
+Dialog.displayName = "Dialog"
+
+const DialogHeader = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex flex-col space-y-1.5 text-center sm:text-left", className)}
+    {...props}
+  />
+))
+DialogHeader.displayName = "DialogHeader"
+
+const DialogTitle = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLHeadingElement>
+>(({ className, ...props }, ref) => (
+  <h2
+    ref={ref}
+    className={cn("text-lg font-semibold leading-none tracking-tight", className)}
+    {...props}
+  />
+))
+DialogTitle.displayName = "DialogTitle"
+
+const DialogDescription = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+DialogDescription.displayName = "DialogDescription"
+
+const DialogContent = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement> & { onClose?: () => void }
+>(({ className, children, onClose, ...props }, ref) => (
+  <div ref={ref} className={cn("pt-0", className)} {...props}>
+    {onClose && (
+      <button
+        onClick={onClose}
+        className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+      >
+        <X className="h-4 w-4" />
+        <span className="sr-only">Close</span>
+      </button>
+    )}
+    {children}
+  </div>
+))
+DialogContent.displayName = "DialogContent"
+
+const DialogFooter = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2",
+      className
+    )}
+    {...props}
+  />
+))
+DialogFooter.displayName = "DialogFooter"
+
+export { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogContent, DialogFooter }

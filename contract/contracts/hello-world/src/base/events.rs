@@ -57,3 +57,11 @@ pub struct Withdrawal {
     pub recipient: Address,
     pub amount: i128,
 }
+
+#[contractevent(topics = ["batch_done"], data_format = "single-value")]
+#[derive(Clone)]
+pub struct NotificationBatchCompleted {
+    #[topic]
+    pub batch_id: BytesN<32>,
+    pub notification_count: u32,
+}

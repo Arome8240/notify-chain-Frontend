@@ -5,6 +5,7 @@ import type { AppStore } from './types';
 import { uiSlice } from './slices/uiSlice';
 import { preferencesSlice } from './slices/preferencesSlice';
 import { dataSlice } from './slices/dataSlice';
+import { walletSlice } from './slices/walletSlice';
 
 /**
  * Create the app store combining all slices
@@ -21,11 +22,21 @@ export const useAppStore = create<AppStore>()(
           ...uiSlice(...args),
           ...preferencesSlice(...args),
           ...dataSlice(...args),
+          ...walletSlice(...args),
         };
       }),
       {
         name: 'notify-chain-store',
-        version: 1,
+        version: 3,
+        migrate: (persistedState, version) => {
+          const state = persistedState as Partial<AppStore> | undefined;
+          return {
+            ...state,
+            dashboardFilterPresets: Array.isArray(state?.dashboardFilterPresets)
+              ? state.dashboardFilterPresets
+              : [],
+          } as Partial<AppStore>;
+        },
         storage: {
           getItem: (name) => {
             const item = localStorage.getItem(name);
@@ -43,10 +54,14 @@ export const useAppStore = create<AppStore>()(
           viewMode: state.viewMode,
           theme: state.theme,
           dashboardChainFilter: state.dashboardChainFilter,
+          dashboardSearchQuery: state.dashboardSearchQuery,
+          dashboardStatusFilters: state.dashboardStatusFilters,
+          dashboardFilterPresets: state.dashboardFilterPresets,
           language: state.language,
           currencyDisplay: state.currencyDisplay,
           notificationsEnabled: state.notificationsEnabled,
           soundEnabled: state.soundEnabled,
+          columnVisibility: state.columnVisibility,
           channels: state.channels,
           rules: state.rules,
           watchlist: state.watchlist,
@@ -81,6 +96,9 @@ export function useUIState<T>(selector?: (state: AppStore) => T): T | AppStore {
     theme: state.theme,
     dashboardChainFilter: state.dashboardChainFilter,
     dashboardSearchQuery: state.dashboardSearchQuery,
+    dashboardStatusFilters: state.dashboardStatusFilters,
+    dashboardFilterPresets: state.dashboardFilterPresets,
+    exportJobs: state.exportJobs,
     toggleSidebar: state.toggleSidebar,
     openModal: state.openModal,
     closeModal: state.closeModal,
@@ -88,7 +106,18 @@ export function useUIState<T>(selector?: (state: AppStore) => T): T | AppStore {
     setTheme: state.setTheme,
     setDashboardChainFilter: state.setDashboardChainFilter,
     setDashboardSearchQuery: state.setDashboardSearchQuery,
+    setDashboardStatusFilters: state.setDashboardStatusFilters,
+    toggleDashboardStatusFilter: state.toggleDashboardStatusFilter,
+    saveDashboardFilterPreset: state.saveDashboardFilterPreset,
+    updateDashboardFilterPreset: state.updateDashboardFilterPreset,
+    deleteDashboardFilterPreset: state.deleteDashboardFilterPreset,
+    applyDashboardFilterPreset: state.applyDashboardFilterPreset,
     resetUIState: state.resetUIState,
+    startExport: state.startExport,
+    updateExportProgress: state.updateExportProgress,
+    updateExportStatus: state.updateExportStatus,
+    removeExportJob: state.removeExportJob,
+    clearCompletedExports: state.clearCompletedExports,
   }))) as (state: AppStore) => T | AppStore;
   return useAppStore(sel);
 }
@@ -112,11 +141,15 @@ export function usePreferences<T>(selector?: (state: AppStore) => T): T | AppSto
     currencyDisplay: state.currencyDisplay,
     notificationsEnabled: state.notificationsEnabled,
     soundEnabled: state.soundEnabled,
+    columnVisibility: state.columnVisibility,
     setLanguage: state.setLanguage,
     setCurrencyDisplay: state.setCurrencyDisplay,
     toggleNotifications: state.toggleNotifications,
     toggleSound: state.toggleSound,
     resetPreferences: state.resetPreferences,
+    setColumnVisibility: state.setColumnVisibility,
+    toggleColumn: state.toggleColumn,
+    resetColumnVisibility: state.resetColumnVisibility,
   }))) as (state: AppStore) => T | AppStore;
   return useAppStore(sel);
 }
@@ -159,4 +192,31 @@ export function useData<T>(selector?: (state: AppStore) => T): T | AppStore {
   return useAppStore(sel);
 }
 
-export type { AppStore, UIState, UIActions, PreferencesState, PreferencesActions, DataState, DataActions } from './types';
+export type {
+  AppStore,
+  UIState,
+  UIActions,
+  PreferencesState,
+  PreferencesActions,
+  DataState,
+  DataActions,
+  WalletState,
+  WalletActions,
+  DashboardFilterPreset,
+  DashboardStatusFilter,
+} from './types';
+
+/**
+ * Custom hook for wallet state
+ */
+export function useWallet(): AppStore;
+export function useWallet<T>(selector: (state: AppStore) => T): T;
+export function useWallet<T>(selector?: (state: AppStore) => T): T | AppStore {
+  const sel = (selector ?? ((state: AppStore) => ({
+    walletAddress: state.walletAddress,
+    isWalletConnected: state.isWalletConnected,
+    setWalletAddress: state.setWalletAddress,
+    disconnectWallet: state.disconnectWallet,
+  }))) as (state: AppStore) => T | AppStore;
+  return useAppStore(sel);
+}

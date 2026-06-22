@@ -9,6 +9,7 @@ import {
   Send,
   Zap,
   ArrowUpRight,
+  GitCommitHorizontal,
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 
@@ -17,6 +18,7 @@ const nav = [
   { href: "/rules", label: "Rules", icon: Bell },
   { href: "/watchlist", label: "Watchlist", icon: Radio },
   { href: "/channels", label: "Channels", icon: Send },
+  { href: "/timeline", label: "Timeline", icon: GitCommitHorizontal },
 ];
 
 export function Sidebar() {

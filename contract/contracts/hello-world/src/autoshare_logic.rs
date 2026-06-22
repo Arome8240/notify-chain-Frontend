@@ -1,7 +1,7 @@
 use crate::base::errors::Error;
 use crate::base::events::{
     AdminTransferred, AutoshareCreated, AutoshareUpdated, ContractPaused, ContractUnpaused,
-    GroupActivated, GroupDeactivated, Withdrawal,
+    GroupActivated, GroupDeactivated, NotificationBatchCompleted, Withdrawal,
 };
 use crate::base::types::{AutoShareDetails, GroupMember, PaymentHistory};
 use soroban_sdk::{contracttype, token, Address, BytesN, Env, String, Vec};
@@ -762,5 +762,33 @@ fn validate_members(members: &Vec<GroupMember>) -> Result<(), Error> {
     if total_percentage != 100 {
         return Err(Error::InvalidTotalPercentage);
     }
+    Ok(())
+}
+
+// ============================================================================
+// Notification Batch Processing
+// ============================================================================
+
+/// Processes a notification batch and emits `NotificationBatchCompleted` once.
+/// Returns an error if the contract is paused or notification_count is zero.
+pub fn process_notification_batch(
+    env: Env,
+    batch_id: BytesN<32>,
+    notification_count: u32,
+) -> Result<(), Error> {
+    if get_paused_status(&env) {
+        return Err(Error::ContractPaused);
+    }
+
+    if notification_count == 0 {
+        return Err(Error::InvalidUsageCount);
+    }
+
+    NotificationBatchCompleted {
+        batch_id,
+        notification_count,
+    }
+    .publish(&env);
+
     Ok(())
 }

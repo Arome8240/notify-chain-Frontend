@@ -3,6 +3,7 @@
 import { Search, Bell } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { ThemeToggle } from "@/src/components/theme-toggle";
+import { WalletButton } from "@/src/components/wallet-button";
 
 interface TopbarProps {
   title: string;
@@ -35,9 +36,7 @@ export function Topbar({ title, description }: TopbarProps) {
         <Button variant="outline" size="icon" aria-label="Notifications">
           <Bell className="size-4" />
         </Button>
-        <div className="flex size-8 items-center justify-center rounded-full bg-secondary text-xs font-medium">
-          AC
-        </div>
+        <WalletButton />
       </div>
     </header>
   );

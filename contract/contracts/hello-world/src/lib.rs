@@ -227,6 +227,11 @@ impl AutoShareContract {
     pub fn reduce_usage(env: Env, id: BytesN<32>) {
         autoshare_logic::reduce_usage(env, id).unwrap();
     }
+
+    /// Processes a notification batch and emits NotificationBatchCompleted.
+    pub fn process_notification_batch(env: Env, batch_id: BytesN<32>, notification_count: u32) {
+        autoshare_logic::process_notification_batch(env, batch_id, notification_count).unwrap();
+    }
 }
 
 // 3. Link the tests (Requirement: Unit Tests)
@@ -249,3 +254,7 @@ pub mod test_utils;
 #[cfg(test)]
 #[path = "tests/test_utils_test.rs"]
 mod test_utils_test;
+
+#[cfg(test)]
+#[path = "tests/batch_test.rs"]
+mod batch_test;

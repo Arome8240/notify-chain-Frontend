@@ -3,10 +3,33 @@
  */
 
 import type { ChainEvent, NotificationChannel, NotificationRule, WatchedContract } from '@/src/lib/mock-data';
+import type { NotificationChannel, NotificationRule, WatchedContract, ChainEvent } from '@/src/lib/mock-data';
+
+// Export Types
+export type ExportStatus = 'idle' | 'preparing' | 'processing' | 'completing' | 'completed' | 'failed';
+export type ExportFormat = 'csv' | 'json' | 'pdf';
+
+export interface ExportJob {
+  id: string;
+  status: ExportStatus;
+  progress: number; // 0-100
+  format: ExportFormat;
+  dataType: 'events' | 'rules' | 'channels' | 'watchlist';
+  totalItems: number;
+  processedItems: number;
+  estimatedTimeRemaining?: number; // in seconds
+  error?: string;
+  startedAt: string;
+  completedAt?: string;
+  downloadUrl?: string;
+}
 
 // UI State Types
 export type ViewMode = 'grid' | 'list';
 export type Theme = 'light' | 'dark' | 'system';
+
+/** Mirror of EventStatus from mock-data — kept here to avoid a circular dep */
+export type DashboardStatusFilter = 'delivered' | 'pending' | 'failed';
 
 export interface UIState {
   sidebarOpen: boolean;
@@ -16,6 +39,11 @@ export interface UIState {
   // Dashboard filters
   dashboardChainFilter: string;
   dashboardSearchQuery: string;
+  /** Active status filters. Empty array means "show all". */
+  dashboardStatusFilters: DashboardStatusFilter[];
+  dashboardFilterPresets: DashboardFilterPreset[];
+  // Export jobs
+  exportJobs: ExportJob[];
 }
 
 export interface UIActions {
@@ -26,7 +54,41 @@ export interface UIActions {
   setTheme: (theme: Theme) => void;
   setDashboardChainFilter: (chain: string) => void;
   setDashboardSearchQuery: (query: string) => void;
+  /** Replace the whole status-filter selection. Pass [] to clear. */
+  setDashboardStatusFilters: (statuses: DashboardStatusFilter[]) => void;
+  /** Toggle a single status on/off within the multi-select set. */
+  toggleDashboardStatusFilter: (status: DashboardStatusFilter) => void;
+  saveDashboardFilterPreset: (name: string) => void;
+  updateDashboardFilterPreset: (id: string, name: string) => void;
+  deleteDashboardFilterPreset: (id: string) => void;
+  applyDashboardFilterPreset: (id: string) => void;
   resetUIState: () => void;
+
+  // Export actions
+  startExport: (job: Omit<ExportJob, 'id' | 'progress' | 'processedItems' | 'startedAt' | 'completedAt' | 'downloadUrl'>) => string;
+  updateExportProgress: (jobId: string, progress: number, processedItems: number, estimatedTimeRemaining?: number) => void;
+  updateExportStatus: (jobId: string, status: ExportStatus, error?: string, downloadUrl?: string) => void;
+  removeExportJob: (jobId: string) => void;
+  clearCompletedExports: () => void;
+}
+
+export interface DashboardFilterPreset {
+  id: string;
+  name: string;
+  dashboardChainFilter: string;
+  dashboardSearchQuery: string;
+  dashboardStatusFilters: DashboardStatusFilter[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Column Visibility Types
+export type DashboardColumnId = 'event' | 'args' | 'rule' | 'status' | 'time';
+export type WatchlistColumnId = 'contract' | 'type' | 'events' | 'eventsToday' | 'actions';
+
+export interface ColumnVisibility {
+  dashboard: Record<DashboardColumnId, boolean>;
+  watchlist: Record<WatchlistColumnId, boolean>;
 }
 
 // Preferences State Types
@@ -38,6 +100,7 @@ export interface PreferencesState {
   currencyDisplay: CurrencyDisplay;
   notificationsEnabled: boolean;
   soundEnabled: boolean;
+  columnVisibility: ColumnVisibility;
 }
 
 export interface PreferencesActions {
@@ -46,6 +109,9 @@ export interface PreferencesActions {
   toggleNotifications: () => void;
   toggleSound: () => void;
   resetPreferences: () => void;
+  setColumnVisibility: (table: keyof ColumnVisibility, visibility: Record<string, boolean>) => void;
+  toggleColumn: (table: keyof ColumnVisibility, column: string) => void;
+  resetColumnVisibility: (table?: keyof ColumnVisibility) => void;
 }
 
 // Data State Types
@@ -83,10 +149,21 @@ export interface DataActions {
   resetData: () => void;
 }
 
-// Combined Store Types
-export interface AppStoreState extends UIState, PreferencesState, DataState {}
+// Wallet State Types
+export interface WalletState {
+  walletAddress: string | null;
+  isWalletConnected: boolean;
+}
 
-export interface AppStore extends AppStoreState, UIActions, PreferencesActions, DataActions {}
+export interface WalletActions {
+  setWalletAddress: (address: string | null) => void;
+  disconnectWallet: () => void;
+}
+
+// Combined Store Types
+export interface AppStoreState extends UIState, PreferencesState, DataState, WalletState {}
+
+export interface AppStore extends AppStoreState, UIActions, PreferencesActions, DataActions, WalletActions {}
 
 // Persistence Config
 export interface PersistenceConfig {

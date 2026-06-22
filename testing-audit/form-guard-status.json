@@ -1,0 +1,12 @@
+{
+  "hookName": "useUnsavedChangesWarning",
+  "scenariosCovered": {
+    "browserRefreshEvents": true,
+    "tabClosureProtection": true,
+    "nextJsRouterInterception": true
+  },
+  "acceptanceCriteria": {
+    "warnBeforeLoss": "Passed",
+    "ignoreAfterSuccessfulSave": "Passed"
+  }
+}

@@ -7,6 +7,7 @@ import { PersistOptions } from 'zustand/middleware';
 import type { AppStore } from '../types';
 import { DEFAULT_UI_STATE } from '../defaults';
 import { DEFAULT_PREFERENCES } from '../defaults';
+import { logger } from '@/src/lib/logger';
 
 /**
  * Custom persistence configuration
@@ -15,7 +16,7 @@ import { DEFAULT_PREFERENCES } from '../defaults';
  */
 export const persistenceConfig: PersistOptions<AppStore, Partial<AppStore>> = {
   name: 'notify-chain-store',
-  version: 1,
+  version: 2,
   merge: (persistedState, currentState) => {
     try {
       const merged = { ...currentState, ...(persistedState as Partial<AppStore>) };
@@ -27,13 +28,15 @@ export const persistenceConfig: PersistOptions<AppStore, Partial<AppStore>> = {
         theme: merged.theme || DEFAULT_UI_STATE.theme,
         dashboardChainFilter: merged.dashboardChainFilter !== undefined ? merged.dashboardChainFilter : DEFAULT_UI_STATE.dashboardChainFilter,
         dashboardSearchQuery: merged.dashboardSearchQuery !== undefined ? merged.dashboardSearchQuery : DEFAULT_UI_STATE.dashboardSearchQuery,
+        dashboardFilterPresets: Array.isArray(merged.dashboardFilterPresets) ? merged.dashboardFilterPresets : DEFAULT_UI_STATE.dashboardFilterPresets,
         language: merged.language || DEFAULT_PREFERENCES.language,
         currencyDisplay: merged.currencyDisplay || DEFAULT_PREFERENCES.currencyDisplay,
         notificationsEnabled: merged.notificationsEnabled !== undefined ? merged.notificationsEnabled : DEFAULT_PREFERENCES.notificationsEnabled,
         soundEnabled: merged.soundEnabled !== undefined ? merged.soundEnabled : DEFAULT_PREFERENCES.soundEnabled,
+        columnVisibility: merged.columnVisibility || DEFAULT_PREFERENCES.columnVisibility,
       } as AppStore;
     } catch (error) {
-      console.error('Error merging persisted state:', error);
+      logger.error('Error merging persisted state', error);
       return currentState;
     }
   },
@@ -42,10 +45,13 @@ export const persistenceConfig: PersistOptions<AppStore, Partial<AppStore>> = {
     viewMode: state.viewMode,
     theme: state.theme,
     dashboardChainFilter: state.dashboardChainFilter,
+    dashboardSearchQuery: state.dashboardSearchQuery,
+    dashboardFilterPresets: state.dashboardFilterPresets,
     language: state.language,
     currencyDisplay: state.currencyDisplay,
     notificationsEnabled: state.notificationsEnabled,
     soundEnabled: state.soundEnabled,
+    columnVisibility: state.columnVisibility,
   }),
 };
 
@@ -70,7 +76,7 @@ export function hydrateStore(): Partial<AppStore> {
 
     return parsed.state;
   } catch (error) {
-    console.error('Error hydrating store:', error);
+    logger.error('Error hydrating store', error);
     return {};
   }
 }
@@ -84,6 +90,6 @@ export function clearPersistedState(): void {
       localStorage.removeItem('notify-chain-store');
     }
   } catch (error) {
-    console.error('Error clearing persisted state:', error);
+    logger.error('Error clearing persisted state', error);
   }
 }
