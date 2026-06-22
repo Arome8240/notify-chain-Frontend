@@ -21,6 +21,8 @@ export interface ChainEvent {
   matchedRule: string | null;
   timestamp: string; // ISO
   args: Record<string, string>;
+  // Reason the notification delivery failed — only present for failed events.
+  failureReason?: string;
 }
 
 export interface NotificationRule {
@@ -35,6 +37,28 @@ export interface NotificationRule {
   status: RuleStatus;
   triggered24h: number;
   lastTriggered: string | null;
+}
+
+export type NotificationTemplateSnapshot = Pick<
+  NotificationRule,
+  | "name"
+  | "description"
+  | "contract"
+  | "eventSignature"
+  | "chain"
+  | "condition"
+  | "channels"
+  | "status"
+>;
+
+export interface NotificationTemplateVersion {
+  id: string;
+  ruleId: string;
+  version: number;
+  createdAt: string;
+  author: string;
+  summary: string;
+  snapshot: NotificationTemplateSnapshot;
 }
 
 export interface WatchedContract {
@@ -141,6 +165,8 @@ export const events: ChainEvent[] = [
     matchedRule: "Lido deposits",
     timestamp: new Date(Date.now() - 1000 * 320).toISOString(),
     args: { sender: "0x77c1...9bd0", amount: "512 ETH" },
+    failureReason:
+      "Webhook endpoint returned 503 Service Unavailable after 3 retries.",
   },
   {
     id: "evt_4f93",
@@ -193,6 +219,21 @@ export const events: ChainEvent[] = [
     matchedRule: "NFT sales > 50 ETH",
     timestamp: new Date(Date.now() - 1000 * 1240).toISOString(),
     args: { collection: "Azuki", price: "62 ETH" },
+  },
+  {
+    id: "evt_0c22",
+    contract: "Maker DSR",
+    contractAddress: "0x373a...A4f8",
+    eventName: "Join",
+    chain: "Ethereum",
+    blockNumber: 21384588,
+    txHash: "0xb904...12fe",
+    status: "failed",
+    matchedRule: "DSR deposits",
+    timestamp: new Date(Date.now() - 1000 * 1420).toISOString(),
+    args: { usr: "0x61aa...77c0", wad: "1,250,000 DAI" },
+    failureReason:
+      "Telegram API rate limit exceeded (429). Notification was not delivered.",
   },
   {
     id: "evt_0b11",
@@ -287,6 +328,117 @@ export const rules: NotificationRule[] = [
     status: "active",
     triggered24h: 19,
     lastTriggered: new Date(Date.now() - 1000 * 488).toISOString(),
+  },
+];
+
+export const templateVersions: NotificationTemplateVersion[] = [
+  {
+    id: "ver_rule_01_01",
+    ruleId: "rule_01",
+    version: 1,
+    createdAt: "2026-05-10T09:30:00.000Z",
+    author: "Maya Patel",
+    summary: "Initial alert template for high-value USDC transfers.",
+    snapshot: {
+      name: "Large USDC transfers",
+      description: "Alert when a single USDC transfer exceeds $1M",
+      contract: "USDC",
+      eventSignature: "Transfer(address,address,uint256)",
+      chain: "Ethereum",
+      condition: "value > 1,000,000",
+      channels: ["webhook"],
+      status: "active",
+    },
+  },
+  {
+    id: "ver_rule_01_02",
+    ruleId: "rule_01",
+    version: 2,
+    createdAt: "2026-05-18T14:10:00.000Z",
+    author: "Maya Patel",
+    summary: "Added Telegram delivery for the trading team.",
+    snapshot: {
+      name: "Large USDC transfers",
+      description: "Alert when a single USDC transfer exceeds $1M",
+      contract: "USDC",
+      eventSignature: "Transfer(address,address,uint256)",
+      chain: "Ethereum",
+      condition: "value > 1,000,000",
+      channels: ["webhook", "telegram"],
+      status: "active",
+    },
+  },
+  {
+    id: "ver_rule_01_03",
+    ruleId: "rule_01",
+    version: 3,
+    createdAt: "2026-06-02T08:45:00.000Z",
+    author: "Omar Hassan",
+    summary: "Expanded the description and tightened the wording.",
+    snapshot: {
+      name: "Large USDC transfers",
+      description: "Alert when a single USDC transfer exceeds $1,000,000",
+      contract: "USDC",
+      eventSignature: "Transfer(address,address,uint256)",
+      chain: "Ethereum",
+      condition: "value >= 1,000,000",
+      channels: ["webhook", "telegram"],
+      status: "active",
+    },
+  },
+  {
+    id: "ver_rule_01_04",
+    ruleId: "rule_01",
+    version: 4,
+    createdAt: "2026-06-14T16:25:00.000Z",
+    author: "Maya Patel",
+    summary: "Current live version after a short review pass.",
+    snapshot: {
+      name: "Large USDC transfers",
+      description: "Alert when a single USDC transfer exceeds $1M",
+      contract: "USDC",
+      eventSignature: "Transfer(address,address,uint256)",
+      chain: "Ethereum",
+      condition: "value > 1,000,000",
+      channels: ["webhook", "telegram"],
+      status: "active",
+    },
+  },
+  {
+    id: "ver_rule_02_01",
+    ruleId: "rule_02",
+    version: 1,
+    createdAt: "2026-05-12T12:00:00.000Z",
+    author: "Maya Patel",
+    summary: "Base liquidation alert template.",
+    snapshot: {
+      name: "Aave liquidations",
+      description: "Notify on every liquidation call in the Aave v3 pool",
+      contract: "Aave Pool",
+      eventSignature: "LiquidationCall(address,address,uint256)",
+      chain: "Ethereum",
+      condition: "any",
+      channels: ["email"],
+      status: "active",
+    },
+  },
+  {
+    id: "ver_rule_02_02",
+    ruleId: "rule_02",
+    version: 2,
+    createdAt: "2026-06-08T10:15:00.000Z",
+    author: "Samir Khan",
+    summary: "Restored Discord delivery for the risk team.",
+    snapshot: {
+      name: "Aave liquidations",
+      description: "Notify on every liquidation call in the Aave v3 pool",
+      contract: "Aave Pool",
+      eventSignature: "LiquidationCall(address,address,uint256)",
+      chain: "Ethereum",
+      condition: "any",
+      channels: ["discord", "email"],
+      status: "active",
+    },
   },
 ];
 
@@ -436,6 +588,211 @@ export const channelLabels: Record<ChannelType, string> = {
   discord: "Discord",
 };
 
+// Notification delivery channels — the surfaces a notification can be sent on.
+// Distinct from NotificationChannel (a configured destination); these are the
+// aggregate per-channel delivery metrics surfaced on the dashboard.
+export type DeliveryChannel = "email" | "sms" | "push" | "in-app";
+
+export interface ChannelMetric {
+  channel: DeliveryChannel;
+  successful: number;
+  failed: number;
+}
+
+export const deliveryChannelLabels: Record<DeliveryChannel, string> = {
+  email: "Email",
+  sms: "SMS",
+  push: "Push",
+  "in-app": "In-App",
+};
+
+export const DELIVERY_CHANNELS: DeliveryChannel[] = [
+  "email",
+  "sms",
+  "push",
+  "in-app",
+];
+
+export const channelMetrics: ChannelMetric[] = [
+  { channel: "email", successful: 1_284_900, failed: 4_120 },
+  { channel: "sms", successful: 642_300, failed: 8_840 },
+  { channel: "push", successful: 2_481_500, failed: 15_240 },
+  { channel: "in-app", successful: 318_420, failed: 910 },
+];
+
+// ---------------------------------------------------------------------------
+// Notification activity heatmap
+//
+// Deliveries are modelled as individual records (a timestamp + channel + status)
+// so the dashboard can group them by hour into a day x hour heatmap. The data is
+// generated deterministically from a seeded PRNG: it stays stable across renders
+// and reloads (no Math.random flicker) and is reproducible for a given anchor.
+// ---------------------------------------------------------------------------
+
+export interface DeliveryRecord {
+  id: string;
+  channel: DeliveryChannel;
+  timestamp: string; // ISO
+  status: "delivered" | "failed";
+}
+
+export interface HeatmapRange {
+  value: string;
+  label: string;
+  days: number;
+}
+
+// Selectable look-back windows for the heatmap. `days` drives how many rows the
+// grid renders; the widest window also bounds how much history we generate.
+export const HEATMAP_RANGES: HeatmapRange[] = [
+  { value: "7", label: "Last 7 days", days: 7 },
+  { value: "14", label: "Last 14 days", days: 14 },
+  { value: "30", label: "Last 30 days", days: 30 },
+];
+
+export const MAX_HEATMAP_DAYS = Math.max(...HEATMAP_RANGES.map((r) => r.days));
+
+// One hour bucket within a day: how many deliveries landed in that hour.
+export interface HeatmapCell {
+  date: string; // local day key, e.g. "2026-6-19"
+  hour: number; // 0-23
+  count: number;
+}
+
+// A single day row of the heatmap: 24 hour cells plus a daily total.
+export interface HeatmapDay {
+  date: string;
+  label: string; // "Jun 19"
+  weekday: string; // "Fri"
+  total: number;
+  cells: HeatmapCell[]; // always length 24, hour 0..23
+}
+
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const MONTH_LABELS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
+// Relative delivery volume per hour of day (0-23). Mirrors the diurnal shape of
+// `eventVolume`: quiet overnight, ramping up to a busy afternoon peak.
+const HOURLY_WEIGHTS = [
+  0.2, 0.15, 0.12, 0.1, 0.1, 0.16, 0.32, 0.52, 0.72, 0.86, 0.95, 1.0, 1.05,
+  1.12, 1.15, 1.06, 0.96, 0.86, 0.72, 0.62, 0.5, 0.4, 0.3, 0.24,
+];
+
+// Small, fast, deterministic PRNG (LCG). Seeded so the mock heatmap is stable.
+function seeded(seed: number): () => number {
+  let s = seed >>> 0;
+  return () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 0xffffffff;
+  };
+}
+
+function startOfDay(d: Date): Date {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+// Local-day key so deliveries bucket by the viewer's day, not UTC.
+function dayKey(d: Date): string {
+  return `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+}
+
+/**
+ * Generate delivery records for the widest heatmap window ending at `now`.
+ * Always covers MAX_HEATMAP_DAYS so every range slices from the same history —
+ * "last 7 days" is identical whether the 7- or 30-day window is selected.
+ */
+export function generateDeliveries(now: Date = new Date()): DeliveryRecord[] {
+  const rand = seeded(0x5f3759df);
+  const records: DeliveryRecord[] = [];
+  const today = startOfDay(now);
+  let n = 0;
+
+  for (let d = MAX_HEATMAP_DAYS - 1; d >= 0; d--) {
+    const day = new Date(today);
+    day.setDate(day.getDate() - d);
+    const weekend = day.getDay() === 0 || day.getDay() === 6;
+    const dayFactor = weekend ? 0.55 : 1;
+
+    for (let h = 0; h < 24; h++) {
+      const expected = HOURLY_WEIGHTS[h] * 11 * dayFactor * (0.75 + rand() * 0.5);
+      const count = Math.round(expected);
+      for (let i = 0; i < count; i++) {
+        const ts = new Date(day);
+        ts.setHours(h, Math.floor(rand() * 60), Math.floor(rand() * 60), 0);
+        // Never emit deliveries in the future (matters for the current hour).
+        if (ts.getTime() > now.getTime()) continue;
+        records.push({
+          id: `dlv_${n.toString(36)}`,
+          channel: DELIVERY_CHANNELS[n % DELIVERY_CHANNELS.length],
+          timestamp: ts.toISOString(),
+          status: rand() < 0.03 ? "failed" : "delivered",
+        });
+        n++;
+      }
+    }
+  }
+
+  return records;
+}
+
+/**
+ * Group delivery records into a day x hour matrix for the last `days` days,
+ * ordered most-recent-first. Days with no activity are still emitted so the grid
+ * keeps a stable shape, and every day always has 24 hour cells.
+ */
+export function groupDeliveriesByHour(
+  records: DeliveryRecord[],
+  days: number,
+  now: Date = new Date()
+): HeatmapDay[] {
+  const today = startOfDay(now);
+  const start = new Date(today);
+  start.setDate(start.getDate() - (days - 1));
+  const startMs = start.getTime();
+
+  // Pre-build empty buckets so zero-activity days render as blank rows.
+  const buckets = new Map<string, HeatmapDay>();
+  for (let d = 0; d < days; d++) {
+    const day = new Date(start);
+    day.setDate(day.getDate() + d);
+    const key = dayKey(day);
+    buckets.set(key, {
+      date: key,
+      label: `${MONTH_LABELS[day.getMonth()]} ${day.getDate()}`,
+      weekday: WEEKDAY_LABELS[day.getDay()],
+      total: 0,
+      cells: Array.from({ length: 24 }, (_, hour) => ({ date: key, hour, count: 0 })),
+    });
+  }
+
+  for (const record of records) {
+    const t = new Date(record.timestamp);
+    if (t.getTime() < startMs || t.getTime() > now.getTime()) continue;
+    const day = buckets.get(dayKey(t));
+    if (!day) continue;
+    day.cells[t.getHours()].count += 1;
+    day.total += 1;
+  }
+
+  // Map insertion order is oldest-first; reverse so today is the top row.
+  return Array.from(buckets.values()).reverse();
+}
+
 export function timeAgo(iso: string | null): string {
   if (!iso) return "never";
   const diff = Date.now() - new Date(iso).getTime();
@@ -448,3 +805,145 @@ export function timeAgo(iso: string | null): string {
   const d = Math.floor(h / 24);
   return `${d}d ago`;
 }
+
+// ── Delivery Timeline ──────────────────────────────────────────────────────
+
+export type DeliveryStageStatus = "completed" | "processing" | "failed" | "pending";
+
+export interface DeliveryStage {
+  id: string;
+  label: "Created" | "Queued" | "Processing" | "Delivered" | "Failed";
+  status: DeliveryStageStatus;
+  timestamp: string | null; // ISO or null if not yet reached
+  detail?: string;
+}
+
+export interface NotificationDelivery {
+  id: string;
+  eventId: string;
+  eventName: string;
+  contract: string;
+  channel: ChannelType;
+  stages: DeliveryStage[];
+}
+
+function makeTimeline(
+  eventId: string,
+  eventName: string,
+  contract: string,
+  channel: ChannelType,
+  finalStatus: "delivered" | "failed" | "processing",
+  baseMs: number
+): NotificationDelivery {
+  const t = (offset: number) =>
+    new Date(baseMs + offset).toISOString();
+
+  const stageMap: Record<
+    "delivered" | "failed" | "processing",
+    DeliveryStage[]
+  > = {
+    delivered: [
+      { id: "s1", label: "Created",    status: "completed",  timestamp: t(0),     detail: "Event matched rule" },
+      { id: "s2", label: "Queued",     status: "completed",  timestamp: t(120),   detail: "Added to dispatch queue" },
+      { id: "s3", label: "Processing", status: "completed",  timestamp: t(380),   detail: "Payload built and signed" },
+      { id: "s4", label: "Delivered",  status: "completed",  timestamp: t(840),   detail: "200 OK from endpoint" },
+    ],
+    failed: [
+      { id: "s1", label: "Created",    status: "completed",  timestamp: t(0),     detail: "Event matched rule" },
+      { id: "s2", label: "Queued",     status: "completed",  timestamp: t(95),    detail: "Added to dispatch queue" },
+      { id: "s3", label: "Processing", status: "completed",  timestamp: t(310),   detail: "Payload built and signed" },
+      { id: "s4", label: "Failed",     status: "failed",     timestamp: t(620),   detail: "Connection refused after 3 retries" },
+    ],
+    processing: [
+      { id: "s1", label: "Created",    status: "completed",  timestamp: t(0),     detail: "Event matched rule" },
+      { id: "s2", label: "Queued",     status: "completed",  timestamp: t(110),   detail: "Added to dispatch queue" },
+      { id: "s3", label: "Processing", status: "processing", timestamp: t(290),   detail: "Awaiting endpoint response…" },
+      { id: "s4", label: "Delivered",  status: "pending",    timestamp: null },
+    ],
+  };
+
+  return {
+    id: `del_${eventId}`,
+    eventId,
+    eventName,
+    contract,
+    channel,
+    stages: stageMap[finalStatus],
+  };
+}
+
+const now = Date.now();
+
+export const deliveryTimelines: NotificationDelivery[] = [
+  makeTimeline("evt_9f2a", "Transfer",          "USDC",            "webhook",  "delivered",  now - 1000 * 28),
+  makeTimeline("evt_8d71", "LiquidationCall",   "Aave Pool",       "discord",  "delivered",  now - 1000 * 64),
+  makeTimeline("evt_7c40", "Swap",              "Uniswap V3",      "webhook",  "processing", now - 1000 * 119),
+  makeTimeline("evt_5a18", "Submitted",         "Lido stETH",      "email",    "failed",     now - 1000 * 320),
+  makeTimeline("evt_4f93", "DepositInitiated",  "Arbitrum Bridge", "webhook",  "delivered",  now - 1000 * 488),
+  makeTimeline("evt_1c33", "OrdersMatched",     "Blur Marketplace","webhook",  "processing", now - 1000 * 1240),
+];
+// ---------------------------------------------------------------------------
+// Delivery trend data — used by the configurable delivery-trends chart.
+// Each interval holds a series of { label, delivered, failed } buckets.
+// ---------------------------------------------------------------------------
+
+export type TrendInterval = "1h" | "24h" | "7d" | "30d";
+
+export interface TrendPoint {
+  label: string;
+  delivered: number;
+  failed: number;
+}
+
+export const TREND_INTERVALS: TrendInterval[] = ["1h", "24h", "7d", "30d"];
+
+export const trendIntervalLabels: Record<TrendInterval, string> = {
+  "1h": "Last hour",
+  "24h": "Last 24 h",
+  "7d": "Last 7 days",
+  "30d": "Last 30 days",
+};
+
+export const deliveryTrends: Record<TrendInterval, TrendPoint[]> = {
+  "1h": [
+    { label: "00m", delivered: 42, failed: 1 },
+    { label: "10m", delivered: 58, failed: 2 },
+    { label: "20m", delivered: 37, failed: 0 },
+    { label: "30m", delivered: 61, failed: 3 },
+    { label: "40m", delivered: 49, failed: 1 },
+    { label: "50m", delivered: 54, failed: 2 },
+    { label: "60m", delivered: 67, failed: 0 },
+  ],
+  "24h": [
+    { label: "00:00", delivered: 310, failed: 4 },
+    { label: "02:00", delivered: 224, failed: 2 },
+    { label: "04:00", delivered: 180, failed: 1 },
+    { label: "06:00", delivered: 260, failed: 3 },
+    { label: "08:00", delivered: 480, failed: 8 },
+    { label: "10:00", delivered: 720, failed: 11 },
+    { label: "12:00", delivered: 890, failed: 14 },
+    { label: "14:00", delivered: 940, failed: 9 },
+    { label: "16:00", delivered: 820, failed: 7 },
+    { label: "18:00", delivered: 670, failed: 5 },
+    { label: "20:00", delivered: 510, failed: 4 },
+    { label: "22:00", delivered: 390, failed: 3 },
+  ],
+  "7d": [
+    { label: "Mon", delivered: 5200, failed: 62 },
+    { label: "Tue", delivered: 6100, failed: 44 },
+    { label: "Wed", delivered: 4800, failed: 91 },
+    { label: "Thu", delivered: 7200, failed: 38 },
+    { label: "Fri", delivered: 8100, failed: 55 },
+    { label: "Sat", delivered: 3900, failed: 20 },
+    { label: "Sun", delivered: 3100, failed: 18 },
+  ],
+  "30d": [
+    { label: "Jun 1", delivered: 28400, failed: 320 },
+    { label: "Jun 5", delivered: 31200, failed: 280 },
+    { label: "Jun 10", delivered: 29800, failed: 410 },
+    { label: "Jun 15", delivered: 33500, failed: 190 },
+    { label: "Jun 20", delivered: 36100, failed: 240 },
+    { label: "Jun 25", delivered: 34700, failed: 310 },
+    { label: "Jun 30", delivered: 38200, failed: 170 },
+  ],
+};

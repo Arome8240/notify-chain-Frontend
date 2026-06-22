@@ -2,6 +2,8 @@ import Link from "next/link";
 import { Zap } from "lucide-react";
 import { Button } from "@/src/components/ui/button";
 import { ConnectWalletButton } from "@/src/components/ui/connect-wallet-button";
+import { ThemeToggle } from "@/src/components/theme-toggle";
+import { WalletButton } from "@/src/components/wallet-button";
 
 const links = [
   { href: "#features", label: "Features" },
@@ -33,6 +35,7 @@ export function MarketingNav() {
         </nav>
 
         <div className="flex items-center gap-2">
+          <ThemeToggle />
           <Button asChild variant="ghost" size="sm" className="hidden sm:flex">
             <a
               href="https://github.com/Core-Foundry/Notify-Chain"
@@ -43,6 +46,7 @@ export function MarketingNav() {
             </a>
           </Button>
           <ConnectWalletButton />
+          <WalletButton className="hidden sm:inline-flex" />
           <Button asChild size="sm">
             <Link href="/dashboard">Open dashboard</Link>
           </Button>

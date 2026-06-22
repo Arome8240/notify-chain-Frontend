@@ -1,7 +1,58 @@
 @import "tailwindcss";
 
-/* Notify-Chain — dark developer-infrastructure theme */
+/* Class-based dark mode for Tailwind v4: `dark:` utilities respond to a `.dark`
+   ancestor (toggled by next-themes on <html>) instead of the prefers-color-scheme
+   media query. :where() keeps specificity at zero so it never fights utilities. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Light theme (default). Surfaces invert the dark palette while preserving the
+   elevation relationship (card brighter than background). Text pairs meet WCAG
+   AA (≥4.5:1); --ring and --input meet the 3:1 non-text threshold (1.4.11). */
 :root {
+  --background: #f7f8f9;
+  --foreground: #0c0e12;
+
+  --card: #ffffff;
+  --card-foreground: #0c0e12;
+
+  --popover: #ffffff;
+  --popover-foreground: #0c0e12;
+
+  /* Brand mint is too light on white, so light mode uses a deeper emerald for
+     legible text-primary / accents; primary-foreground flips to white. */
+  --primary: #0a7d4d;
+  --primary-foreground: #ffffff;
+
+  --secondary: #eef0f2;
+  --secondary-foreground: #1a1c1f;
+
+  --muted: #f0f1f3;
+  --muted-foreground: #5b626e;
+
+  --accent: #eef0f2;
+  --accent-foreground: #0c0e12;
+
+  --destructive: #dc2645;
+  --destructive-foreground: #ffffff;
+
+  --warning: #b45309;
+  --warning-foreground: #ffffff;
+
+  /* --border is decorative (separators, card outlines); --input is darker so
+     interactive control boundaries (Input, SelectTrigger) clear 3:1. */
+  --border: #dfe1e6;
+  --input: #80868f;
+  --ring: #0a7d4d;
+
+  --radius: 0.75rem;
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo,
+    monospace;
+}
+
+/* Dark theme — the project's original developer-infrastructure palette. */
+.dark {
   --background: #08090a;
   --foreground: #ededf0;
 
@@ -32,12 +83,6 @@
   --border: #212328;
   --input: #212328;
   --ring: #2bd97c;
-
-  --radius: 0.75rem;
-
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo,
-    monospace;
 }
 
 @theme inline {

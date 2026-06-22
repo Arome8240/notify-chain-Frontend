@@ -1,5 +1,6 @@
 import { Sidebar } from "@/src/components/dashboard/sidebar";
 import { MobileNav } from "@/src/components/dashboard/mobile-nav";
+import { ExportProgressContainer } from "@/src/components/export-progress";
 
 export default function AppLayout({
   children,
@@ -13,6 +14,7 @@ export default function AppLayout({
         {children}
       </div>
       <MobileNav />
+      <ExportProgressContainer />
     </div>
   );
 }

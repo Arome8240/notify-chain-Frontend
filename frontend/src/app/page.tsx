@@ -20,13 +20,13 @@ import { Button } from "@/src/components/ui/button";
 const features = [
   {
     icon: Radio,
-    title: "Watch any contract",
-    body: "Index events from any address across Ethereum, Base, Arbitrum, Optimism and Polygon. ABI decoding handled for you.",
+    title: "Watch Soroban contracts",
+    body: "Track events emitted by Stellar Soroban contracts and keep contract activity visible from one dashboard.",
   },
   {
     icon: Bell,
     title: "Rules engine",
-    body: "Describe what matters — value thresholds, specific args, function calls — and only get notified when it happens.",
+    body: "Describe what matters - value thresholds, specific args, function calls - and only get notified when it happens.",
   },
   {
     icon: Send,
@@ -35,13 +35,13 @@ const features = [
   },
   {
     icon: GitBranch,
-    title: "Reorg-aware",
-    body: "The off-chain helper tracks confirmations and revises notifications when chains reorganize, so you never act on stale state.",
+    title: "Ledger-aware",
+    body: "The off-chain helper follows Stellar ledger updates and keeps event views aligned with finalized Soroban activity.",
   },
   {
     icon: Gauge,
-    title: "Sub-second latency",
-    body: "Stream new blocks and dispatch alerts in under a second from finality, with delivery metrics on every channel.",
+    title: "Timely event delivery",
+    body: "Surface new contract events quickly after ledger close, with delivery metrics on every channel.",
   },
   {
     icon: ShieldCheck,
@@ -53,8 +53,8 @@ const features = [
 const steps = [
   {
     n: "01",
-    title: "Add a contract",
-    body: "Paste an address or pick from a template. Notify-Chain pulls the ABI and lists every emittable event.",
+    title: "Add a Soroban contract",
+    body: "Paste a Stellar contract ID or pick from a template. Notify-Chain organizes the events your app needs to watch.",
   },
   {
     n: "02",
@@ -68,8 +68,8 @@ const steps = [
   },
   {
     n: "04",
-    title: "React on-chain",
-    body: "Receive signed events the moment they happen and trigger keepers, dashboards, or your team.",
+    title: "React to Soroban events",
+    body: "Receive signed event payloads after ledger close and trigger dashboards, automations, or your team.",
   },
 ];
 
@@ -81,18 +81,18 @@ const channelCards = [
 ];
 
 const previewEvents = [
-  { name: "Transfer", contract: "USDC", meta: "value 2,400,000", tone: "ok" },
+  { name: "TaskCompleted", contract: "TaskRegistry", meta: "reward 2,400", tone: "ok" },
   {
-    name: "LiquidationCall",
-    contract: "Aave Pool",
-    meta: "debt 182,400",
+    name: "EscrowReleased",
+    contract: "EscrowContract",
+    meta: "amount 182,400 stroops",
     tone: "ok",
   },
-  { name: "Swap", contract: "Uniswap V3", meta: "640,000 buy", tone: "pending" },
+  { name: "MilestoneLogged", contract: "ProjectTracker", meta: "step 3 approved", tone: "pending" },
   {
-    name: "ProposalCreated",
-    contract: "Governor",
-    meta: "id #248",
+    name: "VoteCast",
+    contract: "DaoGovernance",
+    meta: "proposal #248",
     tone: "ok",
   },
 ];
@@ -110,15 +110,15 @@ export default function LandingPage() {
           <div className="flex flex-col justify-center">
             <span className="inline-flex w-fit items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs text-muted-foreground">
               <span className="size-1.5 rounded-full bg-primary animate-pulse-dot" />
-              Contract + off-chain helper, open source
+              Stellar Soroban contract + off-chain helper, open source
             </span>
             <h1 className="mt-6 text-balance text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
               Track and react to{" "}
               <span className="text-primary">on-chain events</span>
             </h1>
             <p className="mt-5 max-w-md text-pretty text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Notify-Chain watches your contracts, matches events against your
-              rules, and routes them to webhooks, email, Telegram and Discord —
+              Notify-Chain watches your Soroban contracts, matches events against your
+              rules, and routes them to webhooks, email, Telegram and Discord -
               in real time.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -140,7 +140,7 @@ export default function LandingPage() {
             </div>
             <div className="mt-10 flex flex-wrap gap-x-8 gap-y-3 text-sm text-muted-foreground">
               <span className="flex items-center gap-2">
-                <Boxes className="size-4 text-primary" /> 5 chains
+                <Boxes className="size-4 text-primary" /> Stellar Soroban
               </span>
               <span className="flex items-center gap-2">
                 <Gauge className="size-4 text-primary" /> &lt;1s latency
@@ -225,11 +225,11 @@ export default function LandingPage() {
       <section id="features" className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
         <div className="max-w-2xl">
           <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
-            Infrastructure for reacting to the chain
+            Infrastructure for reacting to Stellar Soroban
           </h2>
           <p className="mt-4 text-pretty leading-relaxed text-muted-foreground">
             A smart contract registry paired with an off-chain helper that does
-            the heavy lifting — indexing, decoding, matching and delivery.
+            the heavy lifting - indexing, decoding, matching and delivery.
           </p>
         </div>
         <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -257,7 +257,7 @@ export default function LandingPage() {
       <section id="how" className="border-y border-border bg-card/30">
         <div className="mx-auto max-w-6xl px-4 py-20 sm:px-6">
           <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
-            From contract to notification in four steps
+            From Soroban contract to notification in four steps
           </h2>
           <div className="mt-12 grid gap-px overflow-hidden rounded-xl border border-border bg-border sm:grid-cols-2 lg:grid-cols-4">
             {steps.map((s) => (
@@ -283,7 +283,7 @@ export default function LandingPage() {
             <p className="mt-4 text-pretty leading-relaxed text-muted-foreground">
               Map every rule to one or more channels. Automate with signed
               webhooks, alert humans on Telegram and Discord, or send email
-              digests — all with delivery tracking and retries.
+              digests - all with delivery tracking and retries.
             </p>
             <Button asChild className="mt-6" variant="outline">
               <Link href="/channels">
@@ -320,10 +320,10 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-grid opacity-30" />
           <div className="relative">
             <h2 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
-              Start watching your contracts
+              Start watching your Soroban contracts
             </h2>
             <p className="mx-auto mt-4 max-w-md text-pretty leading-relaxed text-muted-foreground">
-              Spin up the dashboard, add a contract, and ship your first
+              Spin up the dashboard, add a Stellar contract, and ship your first
               notification rule in minutes.
             </p>
             <Button asChild size="lg" className="mt-8">
@@ -346,8 +346,8 @@ export default function LandingPage() {
             Notify-Chain
           </div>
           <p className="text-xs text-muted-foreground">
-            A contract + off-chain helper system for tracking and reacting to
-            events.
+            A Stellar Soroban contract + off-chain helper system for tracking
+            and reacting to events.
           </p>
         </div>
       </footer>

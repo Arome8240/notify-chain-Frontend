@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { Plus, Send, Activity } from "lucide-react";
 import { Topbar } from "@/src/components/dashboard/topbar";
 import { StatusBadge } from "@/src/components/dashboard/status-badge";
@@ -9,11 +8,11 @@ import {
   channelIcons,
 } from "@/src/components/dashboard/channel-icon";
 import { Button } from "@/src/components/ui/button";
+import { useData } from "@/src/store";
+import { ExportMenu } from "@/src/components/export-menu";
 import {
-  channels as initialChannels,
   channelLabels,
   timeAgo,
-  type NotificationChannel,
   type ChannelType,
 } from "@/src/lib/mock-data";
 
@@ -25,16 +24,8 @@ const channelTypeBlurb: Record<ChannelType, string> = {
 };
 
 export default function ChannelsPage() {
-  const [channels, setChannels] =
-    useState<NotificationChannel[]>(initialChannels);
-
-  function toggleConnect(id: string) {
-    setChannels((prev) =>
-      prev.map((c) =>
-        c.id === id ? { ...c, connected: !c.connected } : c
-      )
-    );
-  }
+  const channels = useData((state) => state.channels);
+  const toggleChannel = useData((state) => state.toggleChannel);
 
   const connected = channels.filter((c) => c.connected);
   const totalDeliveries = channels.reduce((s, c) => s + c.deliveries24h, 0);
@@ -48,7 +39,7 @@ export default function ChannelsPage() {
 
       <div className="flex-1 space-y-6 p-4 md:p-6">
         {/* Summary */}
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           <div className="rounded-xl border border-border bg-card p-5">
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">Connected</span>
@@ -71,6 +62,9 @@ export default function ChannelsPage() {
             <p className="mt-3 text-2xl font-semibold tracking-tight">
               {totalDeliveries.toLocaleString()}
             </p>
+          </div>
+          <div className="flex items-center justify-center">
+            <ExportMenu dataType="channels" />
           </div>
           <div className="col-span-2 flex items-center justify-end lg:col-span-1">
             <Button className="w-full lg:w-auto">
@@ -130,7 +124,7 @@ export default function ChannelsPage() {
                 <Button
                   variant={c.connected ? "ghost" : "default"}
                   size="sm"
-                  onClick={() => toggleConnect(c.id)}
+                  onClick={() => toggleChannel(c.id)}
                 >
                   {c.connected ? "Disconnect" : "Connect"}
                 </Button>
