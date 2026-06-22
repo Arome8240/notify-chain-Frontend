@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import { useMemo, useState, useEffect, Suspense } from "react";
 import {
   Activity,
@@ -7,6 +8,7 @@ import {
   BookmarkPlus,
   CheckCircle2,
   ExternalLink,
+  RefreshCw,
   PencilLine,
   Play,
   Radio,
@@ -18,6 +20,8 @@ import { Topbar } from "@/src/components/dashboard/topbar";
 import { StatCard } from "@/src/components/dashboard/stat-card";
 import { StatusBadge } from "@/src/components/dashboard/status-badge";
 import { EventVolumeChart } from "@/src/components/dashboard/event-volume-chart";
+import { RetryNotificationModal } from "@/src/components/dashboard/retry-notification-modal";
+import { useUIState, useData } from "@/src/store";
 import { DeliveryHeatmap } from "@/src/components/dashboard/delivery-heatmap";
 import { ChannelMetrics } from "@/src/components/dashboard/channel-metrics";
 import { FilterChipGroup } from "@/src/components/dashboard/filter-chip-group";
@@ -31,11 +35,11 @@ import { ColumnToggle } from "@/src/components/column-toggle";
 import type { DashboardFilterPreset, ColumnVisibility } from "@/src/store/types";
 import type { ColumnDef } from "@/src/components/column-toggle";
 import {
-  events,
   dashboardStats,
   CHAINS,
   chainColors,
   timeAgo,
+  type ChainEvent,
   type EventStatus,
 } from "@/src/lib/mock-data";
 
@@ -95,6 +99,10 @@ export default function DashboardPage() {
   const presets = useUIState((state) => state.dashboardFilterPresets);
   const setChain = useUIState((state) => state.setDashboardChainFilter);
   const setQuery = useUIState((state) => state.setDashboardSearchQuery);
+  const events = useData((state) => state.events);
+
+  // Event whose failed notification is being retried in the modal.
+  const [retryEvent, setRetryEvent] = useState<ChainEvent | null>(null);
   const savePreset = useUIState((state) => state.saveDashboardFilterPreset);
   const updatePreset = useUIState((state) => state.updateDashboardFilterPreset);
   const deletePreset = useUIState((state) => state.deleteDashboardFilterPreset);
@@ -135,6 +143,7 @@ export default function DashboardPage() {
         (statusFilters as string[]).includes(e.status);
       return matchesChain && matchesQuery && matchesStatus;
     });
+  }, [events, chain, query]);
   }, [chain, query, statusFilters]);
 
   const activePreset = presets.find((preset) =>
@@ -437,6 +446,23 @@ export default function DashboardPage() {
                 </div>
               )}
 
+                <div className="flex items-center gap-2">
+                  <StatusBadge
+                    tone={statusTone[e.status]}
+                    label={e.status}
+                    pulse={e.status === "pending"}
+                  />
+                  {e.status === "failed" ? (
+                    <button
+                      onClick={() => setRetryEvent(e)}
+                      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-xs font-medium text-destructive transition-colors hover:bg-destructive/10"
+                      aria-label={`Retry notification for ${e.eventName} on ${e.contract}`}
+                    >
+                      <RefreshCw className="size-3" />
+                      Retry
+                    </button>
+                  ) : null}
+                </div>
               {isFormOpen ? (
                 <div className="mt-4 rounded-xl border border-border bg-background p-4">
                   <div className="flex items-center justify-between gap-2">
@@ -565,6 +591,14 @@ export default function DashboardPage() {
           </aside>
         </div>
       </div>
+
+      <RetryNotificationModal
+        event={retryEvent}
+        open={retryEvent !== null}
+        onOpenChange={(open) => {
+          if (!open) setRetryEvent(null);
+        }}
+      />
     </>
   );
 }

@@ -2,6 +2,7 @@
  * Type definitions for the global state management store
  */
 
+import type { ChainEvent, NotificationChannel, NotificationRule, WatchedContract } from '@/src/lib/mock-data';
 import type { NotificationChannel, NotificationRule, WatchedContract, ChainEvent } from '@/src/lib/mock-data';
 
 // Export Types
@@ -118,6 +119,7 @@ export interface DataState {
   channels: NotificationChannel[];
   rules: NotificationRule[];
   watchlist: WatchedContract[];
+  events: ChainEvent[];
 }
 
 export interface DataActions {
@@ -138,7 +140,11 @@ export interface DataActions {
   toggleWatchlistItem: (id: string) => void;
   addWatchlistItem: (item: WatchedContract) => void;
   removeWatchlistItem: (id: string) => void;
-  
+
+  // Events actions
+  updateEvent: (id: string, updates: Partial<ChainEvent>) => void;
+  retryNotification: (id: string) => void;
+
   // Reset actions
   resetData: () => void;
 }

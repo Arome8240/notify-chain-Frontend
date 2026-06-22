@@ -172,6 +172,7 @@ export function useData<T>(selector?: (state: AppStore) => T): T | AppStore {
     channels: state.channels,
     rules: state.rules,
     watchlist: state.watchlist,
+    events: state.events,
     updateChannel: state.updateChannel,
     toggleChannel: state.toggleChannel,
     addChannel: state.addChannel,
@@ -184,6 +185,8 @@ export function useData<T>(selector?: (state: AppStore) => T): T | AppStore {
     toggleWatchlistItem: state.toggleWatchlistItem,
     addWatchlistItem: state.addWatchlistItem,
     removeWatchlistItem: state.removeWatchlistItem,
+    updateEvent: state.updateEvent,
+    retryNotification: state.retryNotification,
     resetData: state.resetData,
   }))) as (state: AppStore) => T | AppStore;
   return useAppStore(sel);

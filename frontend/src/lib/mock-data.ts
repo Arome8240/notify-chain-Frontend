@@ -21,6 +21,8 @@ export interface ChainEvent {
   matchedRule: string | null;
   timestamp: string; // ISO
   args: Record<string, string>;
+  // Reason the notification delivery failed — only present for failed events.
+  failureReason?: string;
 }
 
 export interface NotificationRule {
@@ -163,6 +165,8 @@ export const events: ChainEvent[] = [
     matchedRule: "Lido deposits",
     timestamp: new Date(Date.now() - 1000 * 320).toISOString(),
     args: { sender: "0x77c1...9bd0", amount: "512 ETH" },
+    failureReason:
+      "Webhook endpoint returned 503 Service Unavailable after 3 retries.",
   },
   {
     id: "evt_4f93",
@@ -215,6 +219,21 @@ export const events: ChainEvent[] = [
     matchedRule: "NFT sales > 50 ETH",
     timestamp: new Date(Date.now() - 1000 * 1240).toISOString(),
     args: { collection: "Azuki", price: "62 ETH" },
+  },
+  {
+    id: "evt_0c22",
+    contract: "Maker DSR",
+    contractAddress: "0x373a...A4f8",
+    eventName: "Join",
+    chain: "Ethereum",
+    blockNumber: 21384588,
+    txHash: "0xb904...12fe",
+    status: "failed",
+    matchedRule: "DSR deposits",
+    timestamp: new Date(Date.now() - 1000 * 1420).toISOString(),
+    args: { usr: "0x61aa...77c0", wad: "1,250,000 DAI" },
+    failureReason:
+      "Telegram API rate limit exceeded (429). Notification was not delivered.",
   },
   {
     id: "evt_0b11",
